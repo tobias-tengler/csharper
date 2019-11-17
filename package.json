@@ -3,11 +3,18 @@
 	"displayName": "CSharper",
 	"description": "",
 	"version": "0.0.1",
+  "description": "",
+  "author": {
+    "name": "Tobias Tengler",
+    "url": "https://github.com/tobias-tengler"
+  },
+  "repository": "https://github.com/tobias-tengler/csharper",
 	"engines": {
 		"vscode": "^1.40.0"
 	},
 	"categories": [
-		"Other"
+    "Programming Languages",
+    "Snippets"
 	],
 	"activationEvents": [
 		"onCommand:extension.helloWorld"

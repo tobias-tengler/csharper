@@ -3,10 +3,12 @@
   "displayName": "CSharper",
   "version": "0.0.1",
   "description": "",
+  "license": "MIT",
   "author": {
     "name": "Tobias Tengler",
     "url": "https://github.com/tobias-tengler"
   },
+  "publisher": "tobiastengler",
   "repository": "https://github.com/tobias-tengler/csharper",
   "engines": {
     "vscode": "^1.40.0"
@@ -50,7 +52,7 @@
     "@types/vscode": "^1.40.0",
     "glob": "^7.1.5",
     "mocha": "^6.2.2",
-    "typescript": "^3.6.4",
+    "typescript": "^3.7.2",
     "tslint": "^5.20.0",
     "vscode-test": "^1.2.2"
   }

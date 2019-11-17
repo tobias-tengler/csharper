@@ -9,8 +9,8 @@ export function getFilePath(dir: string, filename: string): string {
   return dir + path.sep + filename + ".cs";
 }
 
-export function fileExists(path: string) {
-  return fs.existsSync(path);
+export function fileExists(filepath: string) {
+  return fs.existsSync(filepath);
 }
 
 export function getTemplatePath(
@@ -18,4 +18,8 @@ export function getTemplatePath(
   templateName: string
 ): string | null {
   return extensionPath + path.sep + "templates" + path.sep + templateName;
+}
+
+export function writeToFile(filepath: string, data: any) {
+  fs.writeFileSync(filepath, data);
 }

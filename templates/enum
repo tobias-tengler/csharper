@@ -1,0 +1,4 @@
+public enum ${name}
+{
+    ${cursor}
+}

@@ -1,4 +1,4 @@
-public enum ${name}
+public enum $name
 {
-    ${cursor}
+    $cursor
 }

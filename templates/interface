@@ -1,4 +1,4 @@
-public interface ${name}
+public interface $name
 {
-    ${cursor}
+    $cursor
 }

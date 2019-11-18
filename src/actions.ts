@@ -14,7 +14,7 @@ import {
   getTemplatePath,
   writeToFile
 } from "./helpers";
-import { templates } from "./constants";
+import { templates, fileNameRegex } from "./constants";
 
 export async function newFileAction(args: any) {
   const directory = args?.fsPath ?? getRootPath();
@@ -38,7 +38,7 @@ export async function newFileAction(args: any) {
       return;
     }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(filename)) {
+    if (!fileNameRegex.test(filename)) {
       displayError("Name contains invalid characters");
       continue;
     }

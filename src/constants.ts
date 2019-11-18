@@ -6,3 +6,5 @@ export const templates: IndexableObject = {
   Controller: "controller",
   Enum: "enum"
 };
+
+export const fileNameRegex: RegExp = /^[a-zA-Z0-9_]+$/;

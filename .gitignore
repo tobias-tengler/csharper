@@ -105,3 +105,6 @@ dist
 
 # Ouput
 out
+
+# VS Code
+.vscode

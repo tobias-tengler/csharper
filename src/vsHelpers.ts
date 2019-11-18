@@ -6,13 +6,34 @@ import {
   extensions,
   window,
   Position,
-  Selection
+  Selection,
+  WorkspaceFolder
 } from "vscode";
 
-export function getRootPath(): string | null {
+export function getWorkspaceFolders(): WorkspaceFolder[] | null {
   const workspaceFolders = workspace.workspaceFolders;
 
   if (!workspaceFolders || workspaceFolders.length < 1) {
+    return null;
+  }
+
+  return workspaceFolders;
+}
+
+export function getWorkspaceFolderUris(): string[] | null {
+  const workspaceFolders = getWorkspaceFolders();
+
+  if (workspaceFolders === null) {
+    return null;
+  }
+
+  return workspaceFolders.map(i => i.uri.fsPath);
+}
+
+export function getRootPath(): string | null {
+  const workspaceFolders = getWorkspaceFolders();
+
+  if (workspaceFolders === null) {
     return null;
   }
 

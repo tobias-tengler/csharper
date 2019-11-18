@@ -1,4 +1,7 @@
-public class $name
+namespace ${namespace}
 {
-    $cursor
+    public class ${name}
+    {
+        ${cursor}
+    }
 }

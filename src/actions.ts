@@ -67,11 +67,11 @@ export async function newFileAction(args: any) {
 
   const templateDocument = await openDocument(templatePath);
   const templateContent = templateDocument.getText();
-  const cursorTextPosition = templateContent.indexOf("$cursor");
+  const cursorTextPosition = templateContent.indexOf("${cursor}");
   const cursorPosition = templateDocument.positionAt(cursorTextPosition);
 
-  let newFileContent = templateContent.replace("$cursor", "");
-  newFileContent = newFileContent.replace("$name", filename);
+  let newFileContent = templateContent.replace("${cursor}", "");
+  newFileContent = newFileContent.replace("${name}", filename);
 
   writeToFile(filepath, newFileContent);
 

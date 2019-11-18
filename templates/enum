@@ -1,4 +1,7 @@
-public enum $name
+namespace ${namespace}
 {
-    $cursor
+    public enum ${name}
+    {
+        ${cursor}
+    }
 }

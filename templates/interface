@@ -1,4 +1,7 @@
-public interface $name
+namespace ${namespace}
 {
-    $cursor
+    public interface ${name}
+    {
+        ${cursor}
+    }
 }

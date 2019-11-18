@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 
-[Route("api/[controller]")]
-public class $name : ControllerBase
+namespace ${namespace}
 {
-    $cursor
+    [Route("api/[controller]")]
+    public class ${name} : ControllerBase
+    {
+        ${cursor}
+    }
 }

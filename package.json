@@ -1,7 +1,7 @@
 {
   "name": "csharper",
   "displayName": "CSharper",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Easily create templated C# files",
   "license": "MIT",
   "author": {

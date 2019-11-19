@@ -2,7 +2,7 @@
   "name": "csharper",
   "displayName": "CSharper",
   "version": "0.0.3",
-  "description": "",
+  "description": "Easily create templated C# files",
   "license": "MIT",
   "author": {
     "name": "Tobias Tengler",

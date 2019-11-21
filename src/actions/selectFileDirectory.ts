@@ -23,6 +23,7 @@ function getDirectoryItems(
   let items: DirectoryQuickPickItem[] = [
     {
       label: ".",
+      description: "Current directory",
       fsPath: directory
     }
   ];
@@ -30,6 +31,7 @@ function getDirectoryItems(
   if (!isRootDir) {
     items.splice(1, 0, {
       label: "..",
+      description: "Parent directory",
       fsPath: path.dirname(directory)
     });
   }
@@ -65,7 +67,8 @@ export async function selectFileDirectory(): Promise<string | null> {
   while (true) {
     if (currentWorkspace === null) {
       currentWorkspace = await vscode.showQuickPick(workspaces, {
-        placeHolder: "Select a workspace"
+        placeHolder: "Select a workspace",
+        ignoreFocusOut: true
       });
 
       if (currentWorkspace === null) {
@@ -88,8 +91,9 @@ export async function selectFileDirectory(): Promise<string | null> {
 
     const selectedItem = await vscode.showQuickPick(items, {
       placeHolder: inRootDir
-        ? "/"
-        : currentDirectory.substring(currentWorkspace.fsPath.length)
+        ? "Select a directory"
+        : currentDirectory.substring(currentWorkspace.fsPath.length),
+      ignoreFocusOut: true
     });
 
     if (selectedItem === null) {

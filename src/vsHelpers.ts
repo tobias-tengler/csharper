@@ -6,48 +6,8 @@ import {
   extensions,
   window,
   Position,
-  Selection,
-  WorkspaceFolder
+  Selection
 } from "vscode";
-
-export function getWorkspaceFolders(): WorkspaceFolder[] | null {
-  const workspaceFolders = workspace.workspaceFolders;
-
-  if (!workspaceFolders || workspaceFolders.length < 1) {
-    return null;
-  }
-
-  return workspaceFolders;
-}
-
-export function getWorkspaceFolderUris(): string[] | null {
-  const workspaceFolders = getWorkspaceFolders();
-
-  if (workspaceFolders === null) {
-    return null;
-  }
-
-  return workspaceFolders.map(i => i.uri.fsPath);
-}
-
-export function getRootPath(): string | null {
-  const workspaceFolders = getWorkspaceFolders();
-
-  if (workspaceFolders === null) {
-    return null;
-  }
-
-  const firstWorkspaceFolder = workspaceFolders[0];
-
-  if (workspaceFolders.length > 1) {
-    displayWarning(
-      `More than one Workspace Folder. Defaulting to \"${firstWorkspaceFolder.name}\"`,
-      false
-    );
-  }
-
-  return workspaceFolders[0].uri.fsPath ?? null;
-}
 
 export function getExtensionPath(): string | null {
   return (
@@ -114,16 +74,4 @@ export async function showDocumentFromFile(
 
 export function setCursorPosition(editor: TextEditor, position: Position) {
   editor.selection = new Selection(position, position);
-}
-
-export function displayError(text: string, modal: boolean = true) {
-  window.showErrorMessage(text, {
-    modal
-  });
-}
-
-export function displayWarning(text: string, modal: boolean = true) {
-  window.showWarningMessage(text, {
-    modal
-  });
 }

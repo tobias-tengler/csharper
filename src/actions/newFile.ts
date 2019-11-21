@@ -1,28 +1,29 @@
+import vscode from "../wrappers/vscode";
+import fs from "../wrappers/fs";
+import { selectFileDirectory } from "./selectFileDirectory";
+import { templates, fileNameRegex } from "../constants";
 import {
-  selectTemplate,
-  selectFilename,
-  displayError,
-  getRootPath,
-  getExtensionPath,
+  getTemplatePath,
+  getNamespace,
+  getProjectFile,
+  getFilePath
+} from "../helpers";
+import {
+  setCursorPosition,
   showDocumentFromFile,
   openDocument,
-  setCursorPosition,
-  getWorkspaceFolderUris
-} from "./vsHelpers";
-import {
-  getFilePath,
-  fileExists,
-  getTemplatePath,
-  writeToFile,
-  getProjectFile,
-  getNamespace
-} from "./helpers";
-import { templates, fileNameRegex } from "./constants";
+  getExtensionPath,
+  selectFilename,
+  selectTemplate
+} from "../vsHelpers";
 
-export async function newFileAction(args: any) {
-  const directory = args?.fsPath ?? getRootPath();
+export default async function newFile(
+  directoryPath: string | null
+): Promise<void> {
+  directoryPath = directoryPath ?? (await selectFileDirectory());
 
-  if (directory === null) {
+  if (directoryPath === null) {
+    console.warn("Directory could not be determined");
     return;
   }
 
@@ -32,7 +33,7 @@ export async function newFileAction(args: any) {
     return;
   }
 
-  console.log(`Creating new '${templateName}' in '${directory}' ...`);
+  console.log(`Creating new '${templateName}' in '${directoryPath}' ...`);
 
   let filename, filepath;
 
@@ -44,14 +45,14 @@ export async function newFileAction(args: any) {
     }
 
     if (!fileNameRegex.test(filename)) {
-      displayError("Name contains invalid characters");
+      vscode.displayError("Name contains invalid characters", { modal: true });
       continue;
     }
 
-    filepath = getFilePath(directory, filename);
+    filepath = getFilePath(directoryPath, filename);
 
-    if (fileExists(filepath)) {
-      displayError("File already exists");
+    if (fs.fileExists(filepath)) {
+      vscode.displayError("File already exists", { modal: true });
       continue;
     }
 
@@ -60,29 +61,34 @@ export async function newFileAction(args: any) {
 
   console.log("Filename:", filename);
 
-  const workspaceFolders = getWorkspaceFolderUris();
+  const workspaceFolders = vscode.getWorkspaceFolders();
 
   if (workspaceFolders === null) {
+    vscode.displayWarning("No Workspace selected");
     return;
   }
 
-  const projectFile = getProjectFile(filepath, workspaceFolders);
+  const projectFile = getProjectFile(
+    filepath,
+    workspaceFolders.map(i => i.uri.fsPath)
+  );
 
   if (projectFile === null) {
+    vscode.displayWarning("C# Project File could not be determined");
     return;
   }
 
   const namespace = getNamespace(projectFile, filepath);
 
   if (namespace === null) {
+    vscode.displayWarning("Namespace of C# Project could not be determined");
     return;
   }
-
-  console.log("Namespace:", namespace);
 
   const extensionPath = getExtensionPath();
 
   if (extensionPath === null) {
+    vscode.displayWarning("Extension path could not be determined");
     return;
   }
 
@@ -91,6 +97,7 @@ export async function newFileAction(args: any) {
   const templatePath = getTemplatePath(extensionPath, templateName);
 
   if (templatePath === null) {
+    vscode.displayWarning("Template Path could not be determined");
     return;
   }
 
@@ -103,7 +110,7 @@ export async function newFileAction(args: any) {
   newFileContent = newFileContent.replace("${name}", filename);
   newFileContent = newFileContent.replace("${namespace}", namespace);
 
-  writeToFile(filepath, newFileContent);
+  fs.writeToFile(filepath, newFileContent);
 
   const editor = await showDocumentFromFile(filepath);
 

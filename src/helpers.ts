@@ -1,23 +1,17 @@
-import * as path from "path";
-import * as fs from "fs";
+import path from "./wrappers/path";
+import fs from "./wrappers/fs";
 
 export function getFilePath(dir: string, filename: string): string {
-  return dir + path.sep + filename + ".cs";
-}
-
-export function fileExists(filepath: string) {
-  return fs.existsSync(filepath);
+  return dir + path.seperator + filename + ".cs";
 }
 
 export function getTemplatePath(
   extensionPath: string,
   templateName: string
 ): string | null {
-  return extensionPath + path.sep + "templates" + path.sep + templateName;
-}
-
-export function writeToFile(filepath: string, data: any) {
-  fs.writeFileSync(filepath, data);
+  return (
+    extensionPath + path.seperator + "templates" + path.seperator + templateName
+  );
 }
 
 function getItemContainingLongestMatch(
@@ -67,11 +61,13 @@ export function getProjectFile(
 
   while (true) {
     const files = fs
-      .readdirSync(currentDirectory)
-      .filter(i => i.endsWith(".csproj"));
+      .getFiles(currentDirectory, {
+        withFileTypes: true
+      })
+      .filter(i => i.name.endsWith(".csproj"));
 
     if (files.length > 0) {
-      return currentDirectory + path.sep + files[0];
+      return currentDirectory + path.seperator + files[0].name;
     }
 
     if (currentDirectory === workspaceRoot) {
@@ -94,9 +90,9 @@ export function getNamespace(projectFile: string, filepath: string): string {
     return rootNamespace;
   }
 
-  if (fileDirectory.startsWith(path.sep)) {
+  if (fileDirectory.startsWith(path.seperator)) {
     fileDirectory = fileDirectory.substring(1);
   }
 
-  return rootNamespace + "." + fileDirectory.replace(path.sep, ".");
+  return rootNamespace + "." + fileDirectory.replace(path.seperator, ".");
 }

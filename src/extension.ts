@@ -1,9 +1,12 @@
 import * as vscode from "vscode";
-import { newFileAction } from "./actions";
+import newFile from "./actions/newFile";
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
-    vscode.commands.registerCommand("csharper.newFile", newFileAction)
+    vscode.commands.registerCommand(
+      "csharper.newFile",
+      async args => await newFile(args?.fsPath)
+    )
   );
 }
 

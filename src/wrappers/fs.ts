@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { WriteFileOptions } from "fs";
+import { WriteFileOptions, Dirent } from "fs";
 
 class FileSystemWrapper {
   fileExists(filepath: string): boolean {
@@ -10,8 +10,11 @@ class FileSystemWrapper {
     fs.writeFileSync(filepath, data, options);
   }
 
-  getFiles(path: string): string[] {
-    return fs.readdirSync(path);
+  getFiles(
+    path: string,
+    options: { encoding?: string | null; withFileTypes: true }
+  ): Dirent[] {
+    return fs.readdirSync(path, options);
   }
 }
 

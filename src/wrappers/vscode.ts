@@ -6,7 +6,8 @@ import {
   window,
   QuickPickOptions,
   InputBoxOptions,
-  MessageOptions
+  MessageOptions,
+  QuickPickItem
 } from "vscode";
 
 class VSCodeWrapper {
@@ -24,10 +25,10 @@ class VSCodeWrapper {
     return extensions.getExtension(name) ?? null;
   }
 
-  async showQuickPick(
-    items: string[],
+  async showQuickPick<T extends QuickPickItem>(
+    items: T[],
     options?: QuickPickOptions
-  ): Promise<string | null> {
+  ): Promise<T | null> {
     return (await window.showQuickPick(items, options)) ?? null;
   }
 

@@ -29,6 +29,12 @@
         "title": "New C# File"
       }
     ],
+    "keybindings": [
+      {
+        "command": "csharper.newFile",
+        "key": "ctrl+j ctrl+j"
+      }
+    ],
     "menus": {
       "explorer/context": [
         {

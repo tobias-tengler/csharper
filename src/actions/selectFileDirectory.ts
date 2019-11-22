@@ -59,9 +59,33 @@ export async function selectFileDirectory(): Promise<string | null> {
 
   if (workspaces === null) {
     return null;
-  } else if (workspaces.length === 1) {
+  }
+
+  if (workspaces.length === 1) {
     currentWorkspace = workspaces[0];
     currentDirectory = currentWorkspace.fsPath;
+  }
+
+  const focusedDocument = vscode.getFocusedDocument();
+
+  if (focusedDocument !== null) {
+    currentDirectory = path.dirname(focusedDocument.uri.fsPath);
+
+    if (workspaces.length > 1) {
+      currentWorkspace = workspaces[0];
+      let smallest = currentDirectory.replace(currentWorkspace.fsPath, "")
+        .length;
+
+      for (let i = 1; i < workspaces.length; i++) {
+        const curSmallest = currentDirectory.replace(workspaces[i].fsPath, "")
+          .length;
+
+        if (curSmallest < smallest) {
+          currentWorkspace = workspaces[i];
+          smallest = curSmallest;
+        }
+      }
+    }
   }
 
   while (true) {

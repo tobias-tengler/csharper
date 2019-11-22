@@ -7,7 +7,8 @@ import {
   QuickPickOptions,
   InputBoxOptions,
   MessageOptions,
-  QuickPickItem
+  QuickPickItem,
+  TextDocument
 } from "vscode";
 
 class VSCodeWrapper {
@@ -34,6 +35,10 @@ class VSCodeWrapper {
 
   async showInputBox(options?: InputBoxOptions): Promise<string | null> {
     return (await window.showInputBox(options)) ?? null;
+  }
+
+  getFocusedDocument(): TextDocument | null {
+    return window.activeTextEditor?.document ?? null;
   }
 
   displayInfo(text: string, options: MessageOptions = {}) {

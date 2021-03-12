@@ -8,11 +8,11 @@ import {
   InputBoxOptions,
   MessageOptions,
   QuickPickItem,
-  TextDocument
+  TextDocument,
 } from "vscode";
 
 class VSCodeWrapper {
-  getWorkspaceFolders(): WorkspaceFolder[] | null {
+  getWorkspaceFolders(): readonly WorkspaceFolder[] | null {
     const workspaceFolders = workspace.workspaceFolders;
 
     if (!workspaceFolders || workspaceFolders.length < 1) {
@@ -26,10 +26,7 @@ class VSCodeWrapper {
     return extensions.getExtension(name) ?? null;
   }
 
-  async showQuickPick<T extends QuickPickItem>(
-    items: T[],
-    options?: QuickPickOptions
-  ): Promise<T | null> {
+  async showQuickPick<T extends QuickPickItem>(items: T[], options?: QuickPickOptions): Promise<T | null> {
     return (await window.showQuickPick(items, options)) ?? null;
   }
 

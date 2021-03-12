@@ -10,10 +10,7 @@ class FileSystemWrapper {
     fs.writeFileSync(filepath, data, options);
   }
 
-  getFiles(
-    path: string,
-    options: { encoding?: string | null; withFileTypes: true }
-  ): Dirent[] {
+  getFiles(path: string, options: Parameters<typeof fs.readdirSync>[1]): Dirent[] {
     return fs.readdirSync(path, options);
   }
 }

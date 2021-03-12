@@ -1,4 +1,5 @@
-export interface TemplateFile {
-  name: string;
+import { QuickPickItem } from "vscode";
+
+export interface TemplateFile extends QuickPickItem {
   filepath: string;
 }

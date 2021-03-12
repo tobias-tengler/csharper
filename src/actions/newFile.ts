@@ -20,43 +20,24 @@ export default async function newFile(directoryPath: string | null): Promise<voi
 
   const selectedTemplate = await selectTemplate(templates);
 
-  console.log(`Creating new '${selectedTemplate.name}' in '${directoryPath}' ...`);
+  console.log(`Creating new '${selectedTemplate.label}' in '${directoryPath}' ...`);
 
   let filename, filepath;
 
   // todo: introduce better way to handle special cases like this
-  if (selectedTemplate.name === "IServiceCollection Extension") {
+  if (selectedTemplate.label === "IServiceCollection Extension") {
     filename = "ServiceCollectionExtensions";
-    filepath = path.join(directoryPath, filename + ".cs");
-
-    if (fs.existsSync(filepath)) {
-      vscode.displayError("File already exists", { modal: true });
-      return;
-    }
   } else {
-    while (true) {
-      filename = await selectFilename(directoryPath);
-
-      if (filename === null) {
-        return;
-      }
-
-      if (!fileNameRegex.test(filename)) {
-        vscode.displayError("Name contains invalid characters", { modal: true });
-        continue;
-      }
-
-      filepath = path.join(directoryPath, filename + ".cs");
-
-      if (fs.existsSync(filepath)) {
-        vscode.displayError("File already exists", { modal: true });
-        continue;
-      }
-
-      break;
-    }
+    filename = await selectFilename(directoryPath);
 
     console.log("Filename:", filename);
+  }
+
+  filepath = path.join(directoryPath, filename + ".cs");
+
+  if (fs.existsSync(filepath)) {
+    vscode.displayError("File already exists", { modal: true });
+    return;
   }
 
   const workspaceFolders = vscode.getWorkspaceFolders();

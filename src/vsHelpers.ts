@@ -9,17 +9,26 @@ export function getExtensionPath(): string | null {
 }
 
 export async function selectTemplate(templates: TemplateFile[]) {
-  const templateNames = templates.map((template) => template.name);
+  return new Promise<TemplateFile>((resolve, reject) => {
+    const quickpick = window.createQuickPick<TemplateFile>();
+    quickpick.ignoreFocusOut = true;
+    quickpick.canSelectMany = false;
+    quickpick.title = "New C# File";
+    quickpick.step = 1;
+    quickpick.totalSteps = 2;
+    quickpick.items = templates;
+    quickpick.onDidChangeSelection((items) => {
+      const firstItem = items[0];
 
-  const selectedTemplateName = await window.showQuickPick(templateNames, {
-    ignoreFocusOut: true,
+      if (firstItem) {
+        resolve(firstItem);
+        quickpick.hide();
+      }
+    });
+    quickpick.onDidHide(reject);
+
+    quickpick.show();
   });
-
-  const selectedTemplate = templates.find((template) => template.name === selectedTemplateName);
-
-  if (!selectedTemplate) throw new Error("No valid template was selected");
-
-  return selectedTemplate;
 }
 
 export async function selectFilename(directoryPath: string) {
@@ -59,10 +68,10 @@ export async function selectFilename(directoryPath: string) {
     inputBox.onDidAccept(() => {
       if (!selectedFileName || error) return;
 
-      inputBox.hide();
       resolve(selectedFileName);
+      inputBox.hide();
     });
-    inputBox.onDidHide(() => reject());
+    inputBox.onDidHide(reject);
 
     inputBox.show();
   });

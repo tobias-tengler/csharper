@@ -18,6 +18,6 @@ export function getTemplates(): TemplateFile[] {
 
   return templateFiles.map((templateFile) => ({
     filepath: path.join(templateDir, templateFile),
-    name: templateFile,
+    label: templateFile,
   }));
 }

@@ -1,59 +1,71 @@
-import { IndexableObject } from "./types/IndexableObject";
-import {
-  TextDocument,
-  TextEditor,
-  workspace,
-  extensions,
-  window,
-  Position,
-  Selection
-} from "vscode";
+import { TextDocument, TextEditor, workspace, extensions, window } from "vscode";
+import { TemplateFile } from "./types/TemplateFile";
+import * as fs from "fs";
+import * as path from "path";
+import { fileNameRegex } from "./constants";
 
 export function getExtensionPath(): string | null {
-  return (
-    extensions.getExtension("tobiastengler.csharper")?.extensionPath ?? null
-  );
+  return extensions.getExtension("tobiastengler.csharper")?.extensionPath ?? null;
 }
 
-export async function selectTemplate(
-  templates: IndexableObject
-): Promise<string | null> {
-  const templateNames = Object.keys(templates);
+export async function selectTemplate(templates: TemplateFile[]) {
+  const templateNames = templates.map((template) => template.name);
 
-  let selectedTemplateName: string | undefined;
+  const selectedTemplateName = await window.showQuickPick(templateNames, {
+    ignoreFocusOut: true,
+  });
 
-  try {
-    selectedTemplateName = await window.showQuickPick(templateNames, {
-      ignoreFocusOut: true
-    });
-  } catch (error) {
-    console.error(error);
-  }
+  const selectedTemplate = templates.find((template) => template.name === selectedTemplateName);
 
-  if (!selectedTemplateName) {
-    return null;
-  }
+  if (!selectedTemplate) throw new Error("No valid template was selected");
 
-  return templates[selectedTemplateName] ?? null;
+  return selectedTemplate;
 }
 
-export async function selectFilename(): Promise<string | null> {
-  let selectedFileName: string | undefined;
+export async function selectFilename(directoryPath: string) {
+  return new Promise<string>((resolve, reject) => {
+    let selectedFileName: string;
+    let error: boolean;
 
-  try {
-    selectedFileName = await window.showInputBox({
-      ignoreFocusOut: true,
-      prompt: "Please enter a name"
+    const inputBox = window.createInputBox();
+    inputBox.ignoreFocusOut = true;
+    inputBox.prompt = "Please enter a name for your file";
+    inputBox.title = "New C# File";
+    inputBox.step = 2;
+    inputBox.totalSteps = 2;
+    inputBox.onDidChangeValue((value) => {
+      if (value) {
+        if (!fileNameRegex.test(value)) {
+          inputBox.validationMessage = "Name contains invalid characters";
+          error = true;
+
+          return;
+        }
+
+        const filepath = path.join(directoryPath, value + ".cs");
+
+        if (fs.existsSync(filepath)) {
+          inputBox.validationMessage = "File already exists";
+          error = true;
+
+          return;
+        }
+      }
+
+      selectedFileName = value;
+      inputBox.validationMessage = undefined;
+      error = false;
     });
-  } catch (error) {
-    console.error(error);
-  }
+    inputBox.onDidAccept(() => {
+      if (!selectedFileName || error) return;
 
-  if (!selectedFileName) {
-    return null;
-  }
+      inputBox.hide();
+      resolve(selectedFileName);
+    });
+    inputBox.onDidHide(() => reject());
 
-  return selectedFileName;
+    inputBox.show();
+  });
 }
 
 export async function openDocument(filepath: string): Promise<TextDocument> {
@@ -64,14 +76,8 @@ export async function showDocument(document: TextDocument) {
   await window.showTextDocument(document);
 }
 
-export async function showDocumentFromFile(
-  filePath: string
-): Promise<TextEditor> {
+export async function showDocumentFromFile(filePath: string): Promise<TextEditor> {
   const document = await openDocument(filePath);
 
   return await window.showTextDocument(document);
-}
-
-export function setCursorPosition(editor: TextEditor, position: Position) {
-  editor.selection = new Selection(position, position);
 }

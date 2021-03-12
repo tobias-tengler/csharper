@@ -2,6 +2,6 @@ namespace ${namespace}
 {
     public enum ${name}
     {
-        ${cursor}
+        ${0}
     }
 }

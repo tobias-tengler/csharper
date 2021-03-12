@@ -11,6 +11,7 @@ import {
   TextDocument,
 } from "vscode";
 
+// todo: get rid of this
 class VSCodeWrapper {
   getWorkspaceFolders(): readonly WorkspaceFolder[] | null {
     const workspaceFolders = workspace.workspaceFolders;
@@ -28,10 +29,6 @@ class VSCodeWrapper {
 
   async showQuickPick<T extends QuickPickItem>(items: T[], options?: QuickPickOptions): Promise<T | null> {
     return (await window.showQuickPick(items, options)) ?? null;
-  }
-
-  async showInputBox(options?: InputBoxOptions): Promise<string | null> {
-    return (await window.showInputBox(options)) ?? null;
   }
 
   getFocusedDocument(): TextDocument | null {

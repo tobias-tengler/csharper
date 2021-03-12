@@ -2,6 +2,6 @@ namespace ${namespace}
 {
     public interface ${name}
     {
-        ${cursor}
+        ${0}
     }
 }

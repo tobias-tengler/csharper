@@ -1,6 +1,6 @@
 import vscode from "../wrappers/vscode";
-import fs from "../wrappers/fs";
-import path from "../wrappers/path";
+import * as fs from "fs";
+import * as path from "path";
 import { DirectoryQuickPickItem } from "../types/DirectoryQuickPickItem";
 
 function getWorkspaceItems(): DirectoryQuickPickItem[] | null {
@@ -10,38 +10,35 @@ function getWorkspaceItems(): DirectoryQuickPickItem[] | null {
     return null;
   }
 
-  return workspaces.map<DirectoryQuickPickItem>(i => ({
+  return workspaces.map<DirectoryQuickPickItem>((i) => ({
     label: i.name,
-    fsPath: i.uri.fsPath
+    fsPath: i.uri.fsPath,
   }));
 }
 
-function getDirectoryItems(
-  directory: string,
-  isRootDir: boolean
-): DirectoryQuickPickItem[] {
+function getDirectoryItems(directory: string, isRootDir: boolean): DirectoryQuickPickItem[] {
   let items: DirectoryQuickPickItem[] = [
     {
       label: ".",
       description: "Current directory",
-      fsPath: directory
-    }
+      fsPath: directory,
+    },
   ];
 
   if (!isRootDir) {
     items.splice(1, 0, {
       label: "..",
       description: "Parent directory",
-      fsPath: path.dirname(directory)
+      fsPath: path.dirname(directory),
     });
   }
 
   const diretories = fs
-    .getFiles(directory, { withFileTypes: true })
-    .filter(i => i.isDirectory())
-    .map<DirectoryQuickPickItem>(i => ({
-      label: i.name,
-      fsPath: directory + path.seperator + i.name
+    .readdirSync(directory, { withFileTypes: true })
+    .filter((file) => file.isDirectory())
+    .map<DirectoryQuickPickItem>((file) => ({
+      label: file.name,
+      fsPath: path.join(directory, file.name),
     }));
 
   if (diretories.length > 0) {
@@ -73,12 +70,10 @@ export async function selectFileDirectory(): Promise<string | null> {
 
     if (workspaces.length > 1) {
       currentWorkspace = workspaces[0];
-      let smallest = currentDirectory.replace(currentWorkspace.fsPath, "")
-        .length;
+      let smallest = currentDirectory.replace(currentWorkspace.fsPath, "").length;
 
       for (let i = 1; i < workspaces.length; i++) {
-        const curSmallest = currentDirectory.replace(workspaces[i].fsPath, "")
-          .length;
+        const curSmallest = currentDirectory.replace(workspaces[i].fsPath, "").length;
 
         if (curSmallest < smallest) {
           currentWorkspace = workspaces[i];
@@ -92,7 +87,7 @@ export async function selectFileDirectory(): Promise<string | null> {
     if (currentWorkspace === null) {
       currentWorkspace = await vscode.showQuickPick(workspaces, {
         placeHolder: "Select a workspace",
-        ignoreFocusOut: true
+        ignoreFocusOut: true,
       });
 
       if (currentWorkspace === null) {
@@ -108,16 +103,11 @@ export async function selectFileDirectory(): Promise<string | null> {
 
     const inRootDir = currentDirectory === currentWorkspace.fsPath;
 
-    const items = getDirectoryItems(
-      currentDirectory,
-      inRootDir && workspaces.length === 1
-    );
+    const items = getDirectoryItems(currentDirectory, inRootDir && workspaces.length === 1);
 
     const selectedItem = await vscode.showQuickPick(items, {
-      placeHolder: inRootDir
-        ? "Select a directory"
-        : currentDirectory.substring(currentWorkspace.fsPath.length),
-      ignoreFocusOut: true
+      placeHolder: inRootDir ? "Select a directory" : currentDirectory.substring(currentWorkspace.fsPath.length),
+      ignoreFocusOut: true,
     });
 
     if (selectedItem === null) {

@@ -1,0 +1,10 @@
+namespace ${namespace}
+{
+    public static class ${name}
+    {
+        public static void ${1:Method}(this ${2:Entity} ${3:obj})
+        {
+            ${0}
+        }
+    }
+}

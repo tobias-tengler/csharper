@@ -1,25 +1,14 @@
 import vscode from "../wrappers/vscode";
-import fs from "../wrappers/fs";
+import * as fs from "fs";
+import * as path from "path";
 import { selectFileDirectory } from "./selectFileDirectory";
-import { templates, fileNameRegex } from "../constants";
-import {
-  getTemplatePath,
-  getNamespace,
-  getProjectFile,
-  getFilePath
-} from "../helpers";
-import {
-  setCursorPosition,
-  showDocumentFromFile,
-  openDocument,
-  getExtensionPath,
-  selectFilename,
-  selectTemplate
-} from "../vsHelpers";
+import { fileNameRegex } from "../constants";
+import { getNamespace, getProjectFile } from "../helpers";
+import { showDocumentFromFile, openDocument, selectFilename, selectTemplate } from "../vsHelpers";
+import { SnippetString } from "vscode";
+import { getTemplates } from "../templates";
 
-export default async function newFile(
-  directoryPath: string | null
-): Promise<void> {
+export default async function newFile(directoryPath: string | null): Promise<void> {
   directoryPath = directoryPath ?? (await selectFileDirectory());
 
   if (directoryPath === null) {
@@ -27,39 +16,48 @@ export default async function newFile(
     return;
   }
 
-  const templateName = await selectTemplate(templates);
+  const templates = getTemplates();
 
-  if (templateName === null) {
-    return;
-  }
+  const selectedTemplate = await selectTemplate(templates);
 
-  console.log(`Creating new '${templateName}' in '${directoryPath}' ...`);
+  console.log(`Creating new '${selectedTemplate.name}' in '${directoryPath}' ...`);
 
   let filename, filepath;
 
-  while (true) {
-    filename = await selectFilename();
+  // todo: introduce better way to handle special cases like this
+  if (selectedTemplate.name === "IServiceCollection Extension") {
+    filename = "ServiceCollectionExtensions";
+    filepath = path.join(directoryPath, filename + ".cs");
 
-    if (filename === null) {
+    if (fs.existsSync(filepath)) {
+      vscode.displayError("File already exists", { modal: true });
       return;
     }
+  } else {
+    while (true) {
+      filename = await selectFilename(directoryPath);
 
-    if (!fileNameRegex.test(filename)) {
-      vscode.displayError("Name contains invalid characters", { modal: true });
-      continue;
+      if (filename === null) {
+        return;
+      }
+
+      if (!fileNameRegex.test(filename)) {
+        vscode.displayError("Name contains invalid characters", { modal: true });
+        continue;
+      }
+
+      filepath = path.join(directoryPath, filename + ".cs");
+
+      if (fs.existsSync(filepath)) {
+        vscode.displayError("File already exists", { modal: true });
+        continue;
+      }
+
+      break;
     }
 
-    filepath = getFilePath(directoryPath, filename);
-
-    if (fs.fileExists(filepath)) {
-      vscode.displayError("File already exists", { modal: true });
-      continue;
-    }
-
-    break;
+    console.log("Filename:", filename);
   }
-
-  console.log("Filename:", filename);
 
   const workspaceFolders = vscode.getWorkspaceFolders();
 
@@ -70,7 +68,7 @@ export default async function newFile(
 
   const projectFile = getProjectFile(
     filepath,
-    workspaceFolders.map(i => i.uri.fsPath)
+    workspaceFolders.map((i) => i.uri.fsPath)
   );
 
   if (projectFile === null) {
@@ -85,36 +83,17 @@ export default async function newFile(
     return;
   }
 
-  const extensionPath = getExtensionPath();
+  const templateDocument = await openDocument(selectedTemplate.filepath);
+  const templateContent = templateDocument
+    .getText()
+    .replace(/\${name}/g, filename)
+    .replace(/\${namespace}/g, namespace);
 
-  if (extensionPath === null) {
-    vscode.displayWarning("Extension path could not be determined");
-    return;
-  }
-
-  console.log("Extension Path:", extensionPath);
-
-  const templatePath = getTemplatePath(extensionPath, templateName);
-
-  if (templatePath === null) {
-    vscode.displayWarning("Template Path could not be determined");
-    return;
-  }
-
-  const templateDocument = await openDocument(templatePath);
-  const templateContent = templateDocument.getText();
-  const cursorTextPosition = templateContent.indexOf("${cursor}");
-  const cursorPosition = templateDocument.positionAt(cursorTextPosition);
-
-  let newFileContent = templateContent.replace("${cursor}", "");
-  newFileContent = newFileContent.replace("${name}", filename);
-  newFileContent = newFileContent.replace("${namespace}", namespace);
-
-  fs.writeToFile(filepath, newFileContent);
+  fs.closeSync(fs.openSync(filepath, "w"));
 
   const editor = await showDocumentFromFile(filepath);
 
-  setCursorPosition(editor, cursorPosition);
+  editor.insertSnippet(new SnippetString(templateContent));
 
   console.log("Successfully created file!");
 }

@@ -1,0 +1,12 @@
+using Microsoft.Extensions.DependencyInjection;
+
+namespace ${namespace}
+{
+    public static class ServiceCollectionExtensions
+    {
+        public static IServiceCollection ${0:Method}(this IServiceCollection services)
+        {
+            return services;
+        }
+    }
+}

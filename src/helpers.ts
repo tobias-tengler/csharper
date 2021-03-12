@@ -1,23 +1,7 @@
-import path from "./wrappers/path";
-import fs from "./wrappers/fs";
+import * as path from "path";
+import * as fs from "fs";
 
-export function getFilePath(dir: string, filename: string): string {
-  return dir + path.seperator + filename + ".cs";
-}
-
-export function getTemplatePath(
-  extensionPath: string,
-  templateName: string
-): string | null {
-  return (
-    extensionPath + path.seperator + "templates" + path.seperator + templateName
-  );
-}
-
-function getItemContainingLongestMatch(
-  items: string[],
-  input: string
-): string | null {
+function getItemContainingLongestMatch(items: string[], input: string): string | null {
   if (items.length < 1) {
     return null;
   }
@@ -44,14 +28,8 @@ function getItemContainingLongestMatch(
   return items[longestIndex];
 }
 
-export function getProjectFile(
-  filepath: string,
-  workspaceFolders: string[]
-): string | null {
-  const workspaceRoot = getItemContainingLongestMatch(
-    workspaceFolders,
-    filepath
-  );
+export function getProjectFile(filepath: string, workspaceFolders: string[]): string | null {
+  const workspaceRoot = getItemContainingLongestMatch(workspaceFolders, filepath);
 
   if (workspaceRoot === null) {
     return null;
@@ -61,13 +39,13 @@ export function getProjectFile(
 
   while (true) {
     const files = fs
-      .getFiles(currentDirectory, {
-        withFileTypes: true
+      .readdirSync(currentDirectory, {
+        withFileTypes: true,
       })
-      .filter(i => i.name.endsWith(".csproj"));
+      .filter((i) => i.name.endsWith(".csproj"));
 
     if (files.length > 0) {
-      return currentDirectory + path.seperator + files[0].name;
+      return path.join(currentDirectory, files[0].name);
     }
 
     if (currentDirectory === workspaceRoot) {
@@ -90,9 +68,9 @@ export function getNamespace(projectFile: string, filepath: string): string {
     return rootNamespace;
   }
 
-  if (fileDirectory.startsWith(path.seperator)) {
+  if (fileDirectory.startsWith(path.sep)) {
     fileDirectory = fileDirectory.substring(1);
   }
 
-  return rootNamespace + "." + fileDirectory.replace(path.seperator, ".");
+  return rootNamespace + "." + fileDirectory.replace(path.sep, ".");
 }

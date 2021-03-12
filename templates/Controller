@@ -1,0 +1,44 @@
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+
+namespace ${namespace}
+{
+    [Route("api/[controller]")]
+    public class ${name} : ControllerBase
+    {
+        public ${name}($0)
+        {
+
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetOne(string id)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddOne([FromBody] ${1:Entity} entity)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> ReplaceOne(string id, [FromBody] ${1:Entity} entity)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteOne(string id)
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+}

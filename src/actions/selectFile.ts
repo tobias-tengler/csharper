@@ -6,7 +6,7 @@ import * as fs from "fs";
 
 type FileResult = [filename: string, filepath: Uri];
 
-export async function selectFile(directory: Uri) {
+export async function selectFile(directory: Uri, isInterface: boolean) {
   const disposables: Disposable[] = [];
 
   try {
@@ -25,6 +25,18 @@ export async function selectFile(directory: Uri) {
       disposables.push(
         input.onDidChangeValue((value) => {
           if (value) {
+            const firstCharacter = value[0];
+
+            if (firstCharacter !== firstCharacter.toUpperCase()) {
+              value = value[0].toUpperCase() + value.slice(1);
+
+              input.value = value;
+            } else if (isInterface && value.length > 1 && value[0] !== "I") {
+              value = "I" + value;
+
+              input.value = value;
+            }
+
             if (!/^[a-zA-Z0-9_]+$/.test(value)) {
               input.validationMessage = "Name contains invalid characters";
               error = true;

@@ -36,7 +36,7 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
 
   const template = await selectTemplate(templates);
 
-  const [filename, filepath] = await selectFile(originDirectory);
+  const [filename, filepath] = await selectFile(originDirectory, template.label === "Interface");
 
   outputChannel.appendLine(`Creating new '${template.label}' in '${filepath}' ...`);
 

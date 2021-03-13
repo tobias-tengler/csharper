@@ -8,7 +8,7 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
   const projectDir = path.dirname(projectUri.fsPath);
   const projectDirUri = Uri.parse(projectDir);
 
-  const directories = await getDirectories(projectDirUri);
+  let directories = await getDirectories(projectDirUri);
 
   if (directories.length < 1 && !editorFileUri) {
     return projectDirUri;
@@ -19,11 +19,14 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
   if (editorFileUri) {
     const editorFileDir = path.dirname(editorFileUri.fsPath);
 
-    const item = getPathItemFromUri(Uri.parse(editorFileDir));
-    item.detail = "Directory of currently focused file";
+    if (editorFileDir !== projectDirUri.fsPath) {
+      const item = getPathItemFromUri(Uri.parse(editorFileDir));
+      item.detail = "Directory of currently focused file";
 
-    // todo: directory is added twice
-    directoryItems.push(item);
+      directoryItems.push(item);
+
+      directories = directories.filter((directory) => directory.fsPath !== editorFileDir);
+    }
   }
 
   directoryItems.push({
@@ -32,8 +35,21 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
     detail: "Project root directory",
   });
 
-  // todo: only show description if directoryName exists twice
-  directoryItems.push(...directories.map<PathItem>(getPathItemFromUri));
+  for (const directory of directories) {
+    const item = getPathItemFromUri(directory);
+
+    const itemWithSameLabel = directoryItems.find((i) => i.label === item.label);
+
+    if (itemWithSameLabel) {
+      if (!itemWithSameLabel.description) {
+        addRelativePathDescription(itemWithSameLabel);
+      }
+
+      addRelativePathDescription(item);
+    }
+
+    directoryItems.push(item);
+  }
 
   const disposables: Disposable[] = [];
 
@@ -75,9 +91,16 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
 
 function getPathItemFromUri(uri: Uri): PathItem {
   const directoryName = path.basename(uri.fsPath);
-  const relativePath = vscode.workspace.asRelativePath(uri, false);
 
-  return { uri, label: directoryName, description: relativePath };
+  return { uri, label: directoryName };
+}
+
+function addRelativePathDescription(item: PathItem) {
+  const relativePath = vscode.workspace.asRelativePath(item.uri, false);
+
+  if (!relativePath.includes(path.sep)) return;
+
+  item.description = relativePath;
 }
 
 async function getDirectories(directoryUri: Uri, directories: Uri[] = []) {

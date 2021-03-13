@@ -10,7 +10,6 @@ import { EOL } from "os";
 import { TextEncoder } from "util";
 import * as vscode from "vscode";
 
-// todo: settings for no namespace and wether to include subdir in namespace
 export async function newFile(outputChannel: OutputChannel, directoryPathFromContextMenu?: string) {
   const [targetWorkspace, origin] = await getWorkspace(directoryPathFromContextMenu);
 

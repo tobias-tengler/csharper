@@ -43,6 +43,16 @@
           "when": "explorerResourceIsFolder"
         }
       ]
+    },
+    "configuration": {
+      "title": "CSharper",
+      "properties": {
+        "csharper.includeNamespace": {
+          "type": "boolean",
+          "default": true,
+          "description": "Should the template be surrounded with a namespace"
+        }
+      }
     }
   },
   "scripts": {

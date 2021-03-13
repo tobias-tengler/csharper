@@ -3,25 +3,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
-namespace ${namespace}
+public class ${name} : IHostedService
 {
-    public class ${name} : IHostedService
+    public ${name}()
     {
-        public ${name}()
-        {
 
-        }
+    }
 
-        public Task StartAsync(CancellationToken stoppingToken)
-        {
-            ${0}
-            
-            return Task.CompletedTask;
-        }
+    public Task StartAsync(CancellationToken stoppingToken)
+    {
+        ${0}
+        
+        return Task.CompletedTask;
+    }
 
-        public Task StopAsync(CancellationToken stoppingToken)
-        {
-            return Task.CompletedTask;
-        }
+    public Task StopAsync(CancellationToken stoppingToken)
+    {
+        return Task.CompletedTask;
     }
 }

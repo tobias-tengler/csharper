@@ -1,14 +1,11 @@
 using HotChocolate.Types;
 
-namespace ${namespace}
+public class ${name} : InputObjectType<${1:Entity}>
 {
-    public class ${name} : InputObjectType<${1:Entity}>
+    protected override void Configure(IInputObjectTypeDescriptor<${1:Entity}> descriptor)
     {
-        protected override void Configure(IInputObjectTypeDescriptor<${1:Entity}> descriptor)
-        {
-            descriptor.Name("${2:Name}");
+        descriptor.Name("${2:Name}");
 
-            descriptor.Field(i => i.${3:Property}).Type<${0}>();
-        }
+        descriptor.Field(i => i.${3:Property}).Type<${0}>();
     }
 }

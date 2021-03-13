@@ -6,6 +6,8 @@ import { selectTemplate } from "./selectTemplate";
 import { selectProject } from "./selectProject";
 import { getNearestProjectFile, getProjectFileUris, getProjectNamespace } from "../projects";
 import { OutputChannel, Uri } from "vscode";
+import { EOL } from "os";
+import { TextEncoder } from "util";
 import * as vscode from "vscode";
 
 // todo: settings for no namespace and wether to include subdir in namespace
@@ -40,22 +42,34 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
 
   outputChannel.appendLine(`Creating new '${template.label}' in '${filepath}' ...`);
 
-  const namespace = getProjectNamespace(projectFile.fsPath, filepath.fsPath);
-
-  if (namespace === null) throw new Error("Namespace of C# Project could not be determined");
-
   const templateDocument = await vscode.workspace.openTextDocument(template.uri);
-  const templateContent = templateDocument
-    .getText()
-    .replace(/\${name}/g, filename)
-    .replace(/\${namespace}/g, namespace);
+  const templateContent = templateDocument.getText().replace(/\${name}/g, filename);
 
-  await vscode.workspace.fs.writeFile(filepath, new Uint8Array());
+  const includeNamespace = vscode.workspace.getConfiguration("csharper").get<boolean>("includeNamespace", true);
+
+  if (includeNamespace) {
+    const namespace = getProjectNamespace(projectFile.fsPath, filepath.fsPath);
+
+    if (namespace === null) throw new Error("Namespace of C# Project could not be determined");
+
+    const namespaceStrig = `namespace ${namespace}${EOL}{${EOL}    ${EOL}}`;
+
+    const utfArray = new TextEncoder().encode(namespaceStrig);
+
+    await vscode.workspace.fs.writeFile(filepath, utfArray);
+  } else {
+    await vscode.workspace.fs.writeFile(filepath, new Uint8Array());
+  }
 
   const newDocument = await vscode.workspace.openTextDocument(filepath);
   const editor = await vscode.window.showTextDocument(newDocument);
+  const snippetString = new vscode.SnippetString(templateContent);
 
-  editor.insertSnippet(new vscode.SnippetString(templateContent));
+  if (includeNamespace) {
+    editor.insertSnippet(snippetString, new vscode.Position(2, 4));
+  } else {
+    editor.insertSnippet(snippetString);
+  }
 
   outputChannel.appendLine("Successfully created new file!");
 }

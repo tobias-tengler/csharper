@@ -1,7 +1,4 @@
-namespace ${namespace}
+public enum ${name}
 {
-    public enum ${name}
-    {
-        ${0}
-    }
+    ${0}
 }

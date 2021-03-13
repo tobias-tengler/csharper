@@ -1,7 +1,4 @@
-namespace ${namespace}
+public class ${name}
 {
-    public class ${name}
-    {
-        ${0}
-    }
+    ${0}
 }

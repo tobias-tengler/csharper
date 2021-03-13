@@ -1,7 +1,4 @@
-namespace ${namespace}
+public interface ${name}
 {
-    public interface ${name}
-    {
-        ${0}
-    }
+    ${0}
 }

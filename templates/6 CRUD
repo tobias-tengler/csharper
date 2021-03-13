@@ -1,38 +1,35 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ${namespace}
+public class ${name}
 {
-    public class ${name}
+    public ${name}($0)
     {
-        public ${name}($0)
-        {
 
-        }
+    }
 
-        public Task<IEnumerable<${1:Entity}>> GetAllAsync()
-        {
-            throw new System.NotImplementedException();
-        }
+    public Task<IEnumerable<${1:Entity}>> GetAllAsync()
+    {
+        throw new System.NotImplementedException();
+    }
 
-        public Task<${1:Entity}> GetOneAsync(string id)
-        {
-            throw new System.NotImplementedException();
-        }
+    public Task<${1:Entity}> GetOneAsync(string id)
+    {
+        throw new System.NotImplementedException();
+    }
 
-        public Task<${1:Entity}> AddOneAsync(${1:Entity} entity)
-        {
-            throw new System.NotImplementedException();
-        }
+    public Task<${1:Entity}> AddOneAsync(${1:Entity} entity)
+    {
+        throw new System.NotImplementedException();
+    }
 
-        public Task<${1:Entity}> ReplaceOneAsync(string id, ${1:Entity} entity)
-        {
-            throw new System.NotImplementedException();
-        }
+    public Task<${1:Entity}> ReplaceOneAsync(string id, ${1:Entity} entity)
+    {
+        throw new System.NotImplementedException();
+    }
 
-        public Task DeleteOneAsync(string id)
-        {
-            throw new System.NotImplementedException();
-        }
+    public Task DeleteOneAsync(string id)
+    {
+        throw new System.NotImplementedException();
     }
 }

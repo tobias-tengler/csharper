@@ -1,66 +1,47 @@
-import vscode from "../wrappers/vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { selectFileDirectory } from "./selectFileDirectory";
-import { fileNameRegex } from "../constants";
-import { getNamespace, getProjectFile } from "../helpers";
-import { showDocumentFromFile, openDocument, selectFilename, selectTemplate } from "../vsHelpers";
-import { SnippetString } from "vscode";
+import { showDocumentFromFile, openDocument, selectFilename, selectTemplate, selectDirectory } from "../vsHelpers";
+import { SnippetString, window } from "vscode";
 import { getTemplates } from "../templates";
 
 export default async function newFile(directoryPath: string | null): Promise<void> {
-  directoryPath = directoryPath ?? (await selectFileDirectory());
+  let fromContext = true;
 
-  if (directoryPath === null) {
+  if (!directoryPath) {
+    directoryPath = await selectDirectory();
+    fromContext = false;
+  }
+
+  if (!directoryPath) {
     console.warn("Directory could not be determined");
     return;
   }
 
   const templates = getTemplates();
 
-  const selectedTemplate = await selectTemplate(templates);
+  const selectedTemplate = await selectTemplate(templates, fromContext);
 
   console.log(`Creating new '${selectedTemplate.label}' in '${directoryPath}' ...`);
 
   let filename, filepath;
 
-  // todo: introduce better way to handle special cases like this
-  if (selectedTemplate.label === "IServiceCollection Extension") {
-    filename = "ServiceCollectionExtensions";
-  } else {
-    filename = await selectFilename(directoryPath);
+  filename = await selectFilename(directoryPath, fromContext);
 
-    console.log("Filename:", filename);
-  }
+  console.log("Filename:", filename);
 
   filepath = path.join(directoryPath, filename + ".cs");
 
-  if (fs.existsSync(filepath)) {
-    vscode.displayError("File already exists", { modal: true });
-    return;
-  }
-
-  const workspaceFolders = vscode.getWorkspaceFolders();
-
-  if (workspaceFolders === null) {
-    vscode.displayWarning("No Workspace selected");
-    return;
-  }
-
-  const projectFile = getProjectFile(
-    filepath,
-    workspaceFolders.map((i) => i.uri.fsPath)
-  );
+  const projectFile = getProjectFile();
 
   if (projectFile === null) {
-    vscode.displayWarning("C# Project File could not be determined");
+    window.showWarningMessage("C# Project File could not be determined");
     return;
   }
 
   const namespace = getNamespace(projectFile, filepath);
 
   if (namespace === null) {
-    vscode.displayWarning("Namespace of C# Project could not be determined");
+    window.showWarningMessage("Namespace of C# Project could not be determined");
     return;
   }
 
@@ -77,4 +58,26 @@ export default async function newFile(directoryPath: string | null): Promise<voi
   editor.insertSnippet(new SnippetString(templateContent));
 
   console.log("Successfully created file!");
+}
+
+export function getProjectFile() {
+  // todo: implement
+  return "";
+}
+
+export function getNamespace(projectFile: string, filepath: string): string {
+  const rootNamespace = path.basename(projectFile).replace(".csproj", "");
+
+  const rootDirectory = path.dirname(projectFile);
+  let fileDirectory = path.dirname(filepath).replace(rootDirectory, "");
+
+  if (fileDirectory.length <= 1) {
+    return rootNamespace;
+  }
+
+  if (fileDirectory.startsWith(path.sep)) {
+    fileDirectory = fileDirectory.substring(1);
+  }
+
+  return rootNamespace + "." + fileDirectory.replace(path.sep, ".");
 }

@@ -1,21 +1,25 @@
-import { TextDocument, TextEditor, workspace, extensions, window } from "vscode";
+import { TextDocument, TextEditor, workspace, extensions, window, WorkspaceFolder } from "vscode";
 import { TemplateFile } from "./types/TemplateFile";
 import * as fs from "fs";
 import * as path from "path";
-import { fileNameRegex } from "./constants";
 
 export function getExtensionPath(): string | null {
   return extensions.getExtension("tobiastengler.csharper")?.extensionPath ?? null;
 }
 
-export async function selectTemplate(templates: TemplateFile[]) {
+export function selectDirectory() {
+  // todo: implement
+  return new Promise<string>((resolve, reject) => {});
+}
+
+export async function selectTemplate(templates: TemplateFile[], fromContext: boolean) {
   return new Promise<TemplateFile>((resolve, reject) => {
     const quickpick = window.createQuickPick<TemplateFile>();
     quickpick.ignoreFocusOut = true;
     quickpick.canSelectMany = false;
     quickpick.title = "New C# File";
-    quickpick.step = 1;
-    quickpick.totalSteps = 2;
+    quickpick.step = fromContext ? 1 : 2;
+    quickpick.totalSteps = fromContext ? 2 : 3;
     quickpick.items = templates;
     quickpick.onDidChangeSelection((items) => {
       const firstItem = items[0];
@@ -31,7 +35,7 @@ export async function selectTemplate(templates: TemplateFile[]) {
   });
 }
 
-export async function selectFilename(directoryPath: string) {
+export async function selectFilename(directoryPath: string, fromContext: boolean) {
   return new Promise<string>((resolve, reject) => {
     let selectedFileName: string;
     let error: boolean;
@@ -40,11 +44,11 @@ export async function selectFilename(directoryPath: string) {
     inputBox.ignoreFocusOut = true;
     inputBox.prompt = "Please enter a name for your file";
     inputBox.title = "New C# File";
-    inputBox.step = 2;
-    inputBox.totalSteps = 2;
+    inputBox.step = fromContext ? 2 : 3;
+    inputBox.totalSteps = fromContext ? 2 : 3;
     inputBox.onDidChangeValue((value) => {
       if (value) {
-        if (!fileNameRegex.test(value)) {
+        if (!/^[a-zA-Z0-9_]+$/.test(value)) {
           inputBox.validationMessage = "Name contains invalid characters";
           error = true;
 

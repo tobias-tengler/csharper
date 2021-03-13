@@ -30,7 +30,7 @@ export async function selectCurrentWorkspace(): Promise<[workspace: WorkspaceFol
   return [selectedWorkspace, null];
 }
 
-export async function selectProject(projectFiles: Uri[]): Promise<Uri> {
+export async function selectProject(projectFiles: Uri[]) {
   const projectItems = projectFiles
     .map((projectFile) => {
       const filename = path.basename(projectFile.fsPath);
@@ -46,50 +46,98 @@ export async function selectProject(projectFiles: Uri[]): Promise<Uri> {
     })
     .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
 
-  // todo: with title and steps
-  const selectedProject = await window.showQuickPick(projectItems);
-
-  if (!selectedProject) throw new Error("No project was selected");
-
-  return selectedProject.uri;
-}
-
-export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
   const disposables: Disposable[] = [];
 
   try {
-    return await new Promise<Uri>(async (resolve, reject) => {
-      const projectDir = path.dirname(projectUri.fsPath);
-      const projectDirUri = Uri.parse(projectDir);
-
-      const directories = await getDirectories(projectDirUri);
-
-      // todo: take editorFileUri into account
-      const directoryItems: PathItem[] = [
-        {
-          uri: projectDirUri,
-          label: path.basename(projectDirUri.fsPath),
-          description: "Project root directory",
-        },
-        ...directories.map<PathItem>((directory) => {
-          const directoryName = path.basename(directory.fsPath);
-          const relativePath = workspace.asRelativePath(directory, false);
-
-          // todo: only show description if directoryName exists twice
-          return { uri: directory, label: directoryName, description: relativePath };
-        }),
-      ];
-
-      if (directoryItems.length === 1) {
-        resolve(directoryItems[0].uri);
-        return;
-      }
-
+    return await new Promise<Uri>((resolve, reject) => {
       const quickpick = window.createQuickPick<PathItem>();
       quickpick.ignoreFocusOut = true;
       quickpick.canSelectMany = false;
       quickpick.title = TITLE;
-      quickpick.placeholder = "Select directory where you would like to place the file";
+      quickpick.placeholder = "Select project";
+      quickpick.step = 1;
+      quickpick.totalSteps = TOTAL_STEPS;
+      quickpick.items = projectItems;
+
+      disposables.push(
+        quickpick.onDidChangeSelection((items) => {
+          const selectedItem = items[0];
+
+          if (selectedItem) {
+            resolve(selectedItem.uri);
+            quickpick.hide();
+          }
+        })
+      );
+
+      disposables.push(
+        quickpick.onDidHide(() => {
+          reject();
+          quickpick.dispose();
+        })
+      );
+
+      quickpick.show();
+    });
+  } finally {
+    disposables.map((disposable) => disposable.dispose());
+  }
+}
+
+export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
+  const projectDir = path.dirname(projectUri.fsPath);
+  const projectDirUri = Uri.parse(projectDir);
+
+  const directories = await getDirectories(projectDirUri);
+
+  const directoryItems: PathItem[] = [];
+
+  if (editorFileUri) {
+    // todo: code is duplicated below
+    // todo: directory is now added twice
+    const editorFileDir = path.dirname(editorFileUri.fsPath);
+    const directoryName = path.basename(editorFileDir);
+    const relativePath = workspace.asRelativePath(editorFileDir, false);
+
+    const item: PathItem = {
+      uri: Uri.parse(editorFileDir),
+      label: directoryName,
+      description: relativePath,
+      detail: "Directory of currently focused file",
+    };
+
+    directoryItems.push(item);
+  }
+
+  directoryItems.push({
+    uri: projectDirUri,
+    label: path.basename(projectDirUri.fsPath),
+    detail: "Project root directory",
+  });
+
+  directoryItems.push(
+    ...directories.map<PathItem>((directory) => {
+      const directoryName = path.basename(directory.fsPath);
+      const relativePath = workspace.asRelativePath(directory, false);
+
+      // todo: only show description if directoryName exists twice
+      return { uri: directory, label: directoryName, description: relativePath };
+    })
+  );
+
+  if (directoryItems.length === 1) {
+    return directoryItems[0].uri;
+  }
+
+  const disposables: Disposable[] = [];
+
+  try {
+    return await new Promise<Uri>(async (resolve, reject) => {
+      const quickpick = window.createQuickPick<PathItem>();
+      quickpick.ignoreFocusOut = true;
+      quickpick.canSelectMany = false;
+      quickpick.title = TITLE;
+      quickpick.placeholder = "Select destination directory";
       quickpick.step = 2;
       quickpick.totalSteps = TOTAL_STEPS;
       quickpick.items = directoryItems;
@@ -128,6 +176,7 @@ export async function selectTemplate(templates: PathItem[]) {
       quickpick.ignoreFocusOut = true;
       quickpick.canSelectMany = false;
       quickpick.title = TITLE;
+      quickpick.placeholder = "Select a template";
       quickpick.step = 3;
       quickpick.totalSteps = TOTAL_STEPS;
       quickpick.items = templates;
@@ -168,7 +217,7 @@ export async function selectFilename(directory: Uri) {
 
       const input = window.createInputBox();
       input.ignoreFocusOut = true;
-      input.prompt = "Please enter a name for the file";
+      input.prompt = "Enter a Filename (without an extension)";
       input.title = TITLE;
       input.step = 4;
       input.totalSteps = TOTAL_STEPS;

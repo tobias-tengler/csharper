@@ -1,84 +1,169 @@
-import { TextDocument, TextEditor, workspace, extensions, window, WorkspaceFolder } from "vscode";
+import { TextDocument, TextEditor, extensions, window, workspace, Disposable } from "vscode";
 import { TemplateFile } from "./types/TemplateFile";
 import * as fs from "fs";
 import * as path from "path";
 
-export function getExtensionPath(): string | null {
-  return extensions.getExtension("tobiastengler.csharper")?.extensionPath ?? null;
+function getFocusedDocument() {
+  const focusedDocument = window.activeTextEditor?.document;
+
+  if (focusedDocument && !focusedDocument.isUntitled) return focusedDocument;
+
+  return null;
 }
 
-export function selectDirectory() {
-  // todo: implement
-  return new Promise<string>((resolve, reject) => {});
+async function getSelectedWorkspace() {
+  const focusedDocument = getFocusedDocument();
+
+  if (focusedDocument) {
+    const workspaceFromDocument = workspace.getWorkspaceFolder(focusedDocument.uri);
+
+    if (workspaceFromDocument) return workspaceFromDocument;
+  }
+
+  const workspaces = workspace.workspaceFolders;
+
+  if (!workspaces) throw new Error("Workspaces could not be determined");
+
+  if (workspaces.length === 1) return workspaces[0];
+
+  const selectedWorkspace = await window.showWorkspaceFolderPick({ ignoreFocusOut: true });
+
+  if (!selectedWorkspace) throw new Error("Selected workspace could not be determined");
+
+  return selectedWorkspace;
+}
+
+export async function selectDirectory() {
+  const disposables: Disposable[] = [];
+
+  try {
+    return await new Promise<string>(async (resolve, reject) => {
+      const workspace = await getSelectedWorkspace();
+
+      const quickpick = window.createQuickPick<TemplateFile>();
+      quickpick.ignoreFocusOut = true;
+      quickpick.canSelectMany = false;
+      quickpick.title = "New C# File";
+      quickpick.placeholder = `Search for directory in workspace '${workspace.name}'`;
+      quickpick.step = 1;
+      quickpick.totalSteps = 3;
+
+      // todo: implement
+
+      disposables.push(
+        quickpick.onDidHide(() => {
+          reject();
+          quickpick.dispose();
+        })
+      );
+
+      quickpick.show();
+    });
+  } finally {
+    disposables.map((disposable) => disposable.dispose());
+  }
 }
 
 export async function selectTemplate(templates: TemplateFile[], fromContext: boolean) {
-  return new Promise<TemplateFile>((resolve, reject) => {
-    const quickpick = window.createQuickPick<TemplateFile>();
-    quickpick.ignoreFocusOut = true;
-    quickpick.canSelectMany = false;
-    quickpick.title = "New C# File";
-    quickpick.step = fromContext ? 1 : 2;
-    quickpick.totalSteps = fromContext ? 2 : 3;
-    quickpick.items = templates;
-    quickpick.onDidChangeSelection((items) => {
-      const firstItem = items[0];
+  const disposables: Disposable[] = [];
 
-      if (firstItem) {
-        resolve(firstItem);
-        quickpick.hide();
-      }
+  try {
+    return await new Promise<TemplateFile>((resolve, reject) => {
+      const quickpick = window.createQuickPick<TemplateFile>();
+      quickpick.ignoreFocusOut = true;
+      quickpick.canSelectMany = false;
+      quickpick.title = "New C# File";
+      quickpick.step = fromContext ? 1 : 2;
+      quickpick.totalSteps = fromContext ? 2 : 3;
+      quickpick.items = templates;
+
+      disposables.push(
+        quickpick.onDidChangeSelection((items) => {
+          const firstItem = items[0];
+
+          if (firstItem) {
+            resolve(firstItem);
+            quickpick.hide();
+          }
+        })
+      );
+
+      disposables.push(
+        quickpick.onDidHide(() => {
+          reject();
+          quickpick.dispose();
+        })
+      );
+
+      quickpick.show();
     });
-    quickpick.onDidHide(reject);
-
-    quickpick.show();
-  });
+  } finally {
+    disposables.map((disposable) => disposable.dispose());
+  }
 }
 
 export async function selectFilename(directoryPath: string, fromContext: boolean) {
-  return new Promise<string>((resolve, reject) => {
-    let selectedFileName: string;
-    let error: boolean;
+  const disposables: Disposable[] = [];
 
-    const inputBox = window.createInputBox();
-    inputBox.ignoreFocusOut = true;
-    inputBox.prompt = "Please enter a name for your file";
-    inputBox.title = "New C# File";
-    inputBox.step = fromContext ? 2 : 3;
-    inputBox.totalSteps = fromContext ? 2 : 3;
-    inputBox.onDidChangeValue((value) => {
-      if (value) {
-        if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-          inputBox.validationMessage = "Name contains invalid characters";
-          error = true;
+  try {
+    return await new Promise<string>((resolve, reject) => {
+      let selectedFileName: string;
+      let error: boolean;
 
-          return;
-        }
+      const input = window.createInputBox();
+      input.ignoreFocusOut = true;
+      input.prompt = "Please enter a name for your file";
+      input.title = "New C# File";
+      input.step = fromContext ? 2 : 3;
+      input.totalSteps = fromContext ? 2 : 3;
 
-        const filepath = path.join(directoryPath, value + ".cs");
+      disposables.push(
+        input.onDidChangeValue((value) => {
+          if (value) {
+            if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+              input.validationMessage = "Name contains invalid characters";
+              error = true;
 
-        if (fs.existsSync(filepath)) {
-          inputBox.validationMessage = "File already exists";
-          error = true;
+              return;
+            }
 
-          return;
-        }
-      }
+            const filepath = path.join(directoryPath, value + ".cs");
 
-      selectedFileName = value;
-      inputBox.validationMessage = undefined;
-      error = false;
+            if (fs.existsSync(filepath)) {
+              input.validationMessage = "File already exists";
+              error = true;
+
+              return;
+            }
+          }
+
+          selectedFileName = value;
+          input.validationMessage = undefined;
+          error = false;
+        })
+      );
+
+      disposables.push(
+        input.onDidAccept(() => {
+          if (!selectedFileName || error) return;
+
+          resolve(selectedFileName);
+          input.hide();
+        })
+      );
+
+      disposables.push(
+        input.onDidHide(() => {
+          reject();
+          input.dispose();
+        })
+      );
+
+      input.show();
     });
-    inputBox.onDidAccept(() => {
-      if (!selectedFileName || error) return;
-
-      resolve(selectedFileName);
-      inputBox.hide();
-    });
-    inputBox.onDidHide(reject);
-
-    inputBox.show();
-  });
+  } finally {
+    disposables.map((disposable) => disposable.dispose());
+  }
 }
 
 export async function openDocument(filepath: string): Promise<TextDocument> {

@@ -1,7 +1,11 @@
-import { getExtensionPath } from "./vsHelpers";
 import * as fs from "fs";
 import * as path from "path";
+import { extensions } from "vscode";
 import { TemplateFile } from "./types/TemplateFile";
+
+function getExtensionPath(): string | null {
+  return extensions.getExtension("tobiastengler.csharper")?.extensionPath ?? null;
+}
 
 function getTemplateDir() {
   const extensionPath = getExtensionPath();

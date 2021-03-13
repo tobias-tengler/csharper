@@ -1,0 +1,20 @@
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using GreenDonut;
+using HotChocolate.DataLoader;
+
+public class ${name} : BatchDataLoader<string, ${1:Entity}>
+{
+    public ${name}(IBatchScheduler scheduler) : base(scheduler)
+    {
+        
+    }
+
+    protected override async Task<IReadOnlyDictionary<string, ${1:Entity}>> LoadBatchAsync(IReadOnlyList<string> keys, CancellationToken cancellationToken)
+    {
+        ${0}
+
+        throw new System.NotImplementedException();
+    }
+}

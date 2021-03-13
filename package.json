@@ -50,7 +50,12 @@
         "csharper.includeNamespace": {
           "type": "boolean",
           "default": true,
-          "description": "Should the template be surrounded with a namespace"
+          "description": "Surround template with namesapce"
+        },
+        "csharper.includeSubdirectoriesInNamespace": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include subdirectories in namespace"
         }
       }
     }

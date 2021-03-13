@@ -32,8 +32,14 @@ export function getNearestProjectFile(projectFiles: vscode.Uri[], origin: vscode
   return null;
 }
 
-export function getProjectNamespace(projectFile: string, filepath: string): string {
+export function getProjectNamespace(
+  projectFile: string,
+  filepath: string,
+  includeSubdirectoriesInNamespace: boolean
+): string {
   const rootNamespace = path.basename(projectFile).replace(".csproj", "");
+
+  if (!includeSubdirectoriesInNamespace) return rootNamespace;
 
   const rootDirectory = path.dirname(projectFile);
   let fileDirectory = path.dirname(filepath).replace(rootDirectory, "");

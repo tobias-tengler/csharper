@@ -48,7 +48,11 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
   const includeNamespace = vscode.workspace.getConfiguration("csharper").get<boolean>("includeNamespace", true);
 
   if (includeNamespace) {
-    const namespace = getProjectNamespace(projectFile.fsPath, filepath.fsPath);
+    const includeSubdirectoriesInNamespace = vscode.workspace
+      .getConfiguration("csharper")
+      .get<boolean>("includeSubdirectoriesInNamespace", false);
+
+    const namespace = getProjectNamespace(projectFile.fsPath, filepath.fsPath, includeSubdirectoriesInNamespace);
 
     if (namespace === null) throw new Error("Namespace of C# Project could not be determined");
 

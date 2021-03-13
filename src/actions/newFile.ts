@@ -13,6 +13,52 @@ import {
 import { getTemplates } from "../templates";
 import * as vscode from "vscode";
 
+// todo: settings for no namespace and wether to include subdir in namespace
+export default async function newFile(directoryPathFromContextMenu: string | null): Promise<void> {
+  try {
+    const [targetWorkspace, origin] = await getWorkspace(directoryPathFromContextMenu);
+
+    const projectFiles = await getProjectFileUris(targetWorkspace);
+
+    const projectFile = await getProjectFile(projectFiles, origin);
+
+    let originDirectory = origin;
+    if (!directoryPathFromContextMenu) {
+      originDirectory = await selectDirectory(origin, projectFile);
+    }
+
+    if (!originDirectory) throw new Error("Origin directory could not be determined");
+
+    const templates = getTemplates();
+
+    const template = await selectTemplate(templates);
+
+    const [filename, filepath] = await selectFile(originDirectory);
+
+    console.log(`Creating new '${template.label}' in '${filepath}' ...`);
+
+    const namespace = getNamespace(projectFile.fsPath, filepath);
+
+    if (namespace === null) throw new Error("Namespace of C# Project could not be determined");
+
+    const templateDocument = await openDocument(template.uri.fsPath);
+    const templateContent = templateDocument
+      .getText()
+      .replace(/\${name}/g, filename)
+      .replace(/\${namespace}/g, namespace);
+
+    fs.closeSync(fs.openSync(filepath, "w"));
+
+    const editor = await showDocumentFromFile(filepath);
+
+    editor.insertSnippet(new vscode.SnippetString(templateContent));
+
+    console.log("Successfully created file!");
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 async function getWorkspace(
   directoryPath: string | null
 ): Promise<[workspace: vscode.WorkspaceFolder, origin: vscode.Uri | null]> {
@@ -49,49 +95,6 @@ async function getProjectFile(projectFiles: vscode.Uri[], origin: vscode.Uri | n
   // else if (projectFiles.length === 1) return projectFiles[0];
 
   return await selectProject(projectFiles);
-}
-
-export default async function newFile(directoryPathFromContextMenu: string | null): Promise<void> {
-  const [targetWorkspace, origin] = await getWorkspace(directoryPathFromContextMenu);
-
-  const projectFiles = await getProjectFileUris(targetWorkspace);
-
-  const projectFile = await getProjectFile(projectFiles, origin);
-
-  let originDirectory = origin;
-  if (!directoryPathFromContextMenu) {
-    originDirectory = await selectDirectory(origin);
-  }
-
-  if (!originDirectory) throw new Error("Origin directory could not be determined");
-
-  console.log({ originDirectory: originDirectory.fsPath, projectFile: projectFile.fsPath });
-
-  const templates = getTemplates();
-
-  const template = await selectTemplate(templates);
-
-  const [filename, filepath] = await selectFile(originDirectory);
-
-  console.log(`Creating new '${template.label}' in '${filepath}' ...`);
-
-  const namespace = getNamespace(projectFile.fsPath, filepath);
-
-  if (namespace === null) throw new Error("Namespace of C# Project could not be determined");
-
-  const templateDocument = await openDocument(template.uri.fsPath);
-  const templateContent = templateDocument
-    .getText()
-    .replace(/\${name}/g, filename)
-    .replace(/\${namespace}/g, namespace);
-
-  fs.closeSync(fs.openSync(filepath, "w"));
-
-  const editor = await showDocumentFromFile(filepath);
-
-  editor.insertSnippet(new vscode.SnippetString(templateContent));
-
-  console.log("Successfully created file!");
 }
 
 export function getNamespace(projectFile: string, filepath: string): string {

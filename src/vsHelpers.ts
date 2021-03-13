@@ -1,19 +1,12 @@
 import { TextDocument, TextEditor, Uri, window, workspace, Disposable, FileType, RelativePattern } from "vscode";
 import { PathItem } from "./types/PathItem";
 import * as path from "path";
-import { existsSync, readdirSync } from "fs";
+import { existsSync } from "fs";
 import { WorkspaceFolder } from "vscode";
 
 const TOTAL_STEPS = 4;
 const TITLE = "New C# File";
-
-function getFocusedDocument() {
-  const focusedDocument = window.activeTextEditor?.document;
-
-  if (focusedDocument && !focusedDocument.isUntitled) return focusedDocument;
-
-  return null;
-}
+const EXCLUDED_DIRECTORIES = ["bin", "obj", "Properties", ".vscode"];
 
 export async function selectCurrentWorkspace(): Promise<[workspace: WorkspaceFolder, origin: Uri | null]> {
   const focusedDocument = getFocusedDocument();
@@ -37,59 +30,23 @@ export async function selectCurrentWorkspace(): Promise<[workspace: WorkspaceFol
   return [selectedWorkspace, null];
 }
 
-export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
-  const relativePattern = new RelativePattern(workspaceFolder, "**/*.csproj");
-
-  const uris = await workspace.findFiles(relativePattern);
-
-  if (!uris || uris.length < 1) throw new Error("No C# projects could be found in the selected workspace");
-
-  return uris;
-}
-
-async function getDirectories(workspaceFolder: WorkspaceFolder, directories: string[] = []) {
-  const foldersToExcludeMap = workspace
-    .getConfiguration("files", workspaceFolder)
-    .get<{ [key: string]: boolean }>("exclude");
-
-  if (foldersToExcludeMap) {
-    const wuw = Object.entries(foldersToExcludeMap)
-      .filter((i) => i[1] === true)
-      .map((i) => i[0]);
-  }
-
-  return [""];
-
-  // const directoryEntries = await workspace.fs.readDirectory(Uri.parse(directoryPath));
-  // const subDirs = directoryEntries.filter((i) => i[1] === FileType.Directory).map((i) => i[0]);
-
-  // console.log(directoryPath, subDirs);
-
-  // for (const [subDir] of subDirs) {
-  //   const fullpath = path.join(directoryPath, subDir);
-
-  //   directories.push(fullpath);
-
-  //   await getDirectories(fullpath, directories);
-  // }
-
-  // return directories;
-}
-
 export async function selectProject(projectFiles: Uri[]): Promise<Uri> {
-  const projectItems = projectFiles.map((projectFile) => {
-    const filename = path.basename(projectFile.fsPath);
-    const projectName = filename.replace(".csproj", "");
+  const projectItems = projectFiles
+    .map((projectFile) => {
+      const filename = path.basename(projectFile.fsPath);
+      const projectName = filename.replace(".csproj", "");
 
-    const item: PathItem = {
-      label: projectName,
-      description: workspace.asRelativePath(projectFile),
-      uri: projectFile,
-    };
+      const item: PathItem = {
+        label: projectName,
+        description: workspace.asRelativePath(projectFile, false),
+        uri: projectFile,
+      };
 
-    return item;
-  });
+      return item;
+    })
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
 
+  // todo: with title and steps
   const selectedProject = await window.showQuickPick(projectItems);
 
   if (!selectedProject) throw new Error("No project was selected");
@@ -97,51 +54,69 @@ export async function selectProject(projectFiles: Uri[]): Promise<Uri> {
   return selectedProject.uri;
 }
 
-export async function selectDirectory(originDirectory: Uri | null) {
-  return Uri.parse("");
+export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
+  const disposables: Disposable[] = [];
 
-  // const disposables: Disposable[] = [];
+  try {
+    return await new Promise<Uri>(async (resolve, reject) => {
+      const projectDir = path.dirname(projectUri.fsPath);
+      const projectDirUri = Uri.parse(projectDir);
 
-  // try {
-  //   return await new Promise<string>(async (resolve, reject) => {
-  //     // const currentWorkspace = await selectCurrentWorkspace();
-  //     // const projectFileUris = await getProjectFileUris(currentWorkspace);
-  //     // console.log({ projectFileUris });
-  //     // const quickpick = window.createQuickPick<PathItem>();
-  //     // quickpick.ignoreFocusOut = true;
-  //     // quickpick.canSelectMany = false;
-  //     // quickpick.title = TITLE;
-  //     // quickpick.placeholder = `Search for directory in workspace '${currentWorkspace.name}'`;
-  //     // quickpick.step = 1;
-  //     // quickpick.totalSteps = TOTAL_STEPS;
-  //     // todo: this could maybe be lazy
-  //     // const directories = await getDirectories(currentWorkspace);
-  //     // const directoryItems = directories.map((directory) =>
-  //     //   getPathItemFromPath(directory, currentWorkspace.uri.fsPath)
-  //     // );
-  //     // console.log("directories", directories);
-  //     // const focusedDocument = getFocusedDocument();
-  //     // if (focusedDocument) {
-  //     //   const focusedDocumentDir = path.dirname(focusedDocument.uri.fsPath);
-  //     //   const item = getPathItemFromPath(focusedDocumentDir, "");
-  //     //   item.description = "Directory of focused document";
-  //     //   item.alwaysShow = true;
-  //     //   item.picked = true;
-  //     //   quickpick.items = [item, ...directoryItems];
-  //     // } else {
-  //     //   quickpick.items = directoryItems;
-  //     // }
-  //     // disposables.push(
-  //     //   quickpick.onDidHide(() => {
-  //     //     reject();
-  //     //     quickpick.dispose();
-  //     //   })
-  //     // );
-  //     // quickpick.show();
-  //   });
-  // } finally {
-  //   disposables.map((disposable) => disposable.dispose());
-  // }
+      const directories = await getDirectories(projectDirUri);
+
+      // todo: take editorFileUri into account
+      const directoryItems: PathItem[] = [
+        {
+          uri: projectDirUri,
+          label: path.basename(projectDirUri.fsPath),
+          description: "Project root directory",
+        },
+        ...directories.map<PathItem>((directory) => {
+          const directoryName = path.basename(directory.fsPath);
+          const relativePath = workspace.asRelativePath(directory, false);
+
+          // todo: only show description if directoryName exists twice
+          return { uri: directory, label: directoryName, description: relativePath };
+        }),
+      ];
+
+      if (directoryItems.length === 1) {
+        resolve(directoryItems[0].uri);
+        return;
+      }
+
+      const quickpick = window.createQuickPick<PathItem>();
+      quickpick.ignoreFocusOut = true;
+      quickpick.canSelectMany = false;
+      quickpick.title = TITLE;
+      quickpick.placeholder = "Select directory where you would like to place the file";
+      quickpick.step = 2;
+      quickpick.totalSteps = TOTAL_STEPS;
+      quickpick.items = directoryItems;
+
+      disposables.push(
+        quickpick.onDidChangeSelection((items) => {
+          const selectedItem = items[0];
+
+          if (selectedItem) {
+            resolve(selectedItem.uri);
+            quickpick.hide();
+          }
+        })
+      );
+
+      disposables.push(
+        quickpick.onDidHide(() => {
+          reject();
+          quickpick.dispose();
+        })
+      );
+
+      quickpick.show();
+    });
+  } finally {
+    disposables.map((disposable) => disposable.dispose());
+  }
 }
 
 export async function selectTemplate(templates: PathItem[]) {
@@ -159,10 +134,10 @@ export async function selectTemplate(templates: PathItem[]) {
 
       disposables.push(
         quickpick.onDidChangeSelection((items) => {
-          const firstItem = items[0];
+          const selectedItem = items[0];
 
-          if (firstItem) {
-            resolve(firstItem);
+          if (selectedItem) {
+            resolve(selectedItem);
             quickpick.hide();
           }
         })
@@ -186,13 +161,14 @@ export async function selectFilename(directory: Uri) {
   const disposables: Disposable[] = [];
 
   try {
-    return await new Promise<string>((resolve, reject) => {
-      let selectedFileName: string;
+    return await new Promise<[filename: string, filepath: string]>((resolve, reject) => {
+      let selectedFilename: string;
+      let selectedFilepath: string;
       let error: boolean;
 
       const input = window.createInputBox();
       input.ignoreFocusOut = true;
-      input.prompt = "Please enter a name for your file";
+      input.prompt = "Please enter a name for the file";
       input.title = TITLE;
       input.step = 4;
       input.totalSteps = TOTAL_STEPS;
@@ -207,9 +183,9 @@ export async function selectFilename(directory: Uri) {
               return;
             }
 
-            const filepath = path.join(directory.fsPath, value + ".cs");
+            selectedFilepath = path.join(directory.fsPath, value + ".cs");
 
-            if (existsSync(filepath)) {
+            if (existsSync(selectedFilepath)) {
               input.validationMessage = "File already exists";
               error = true;
 
@@ -217,7 +193,7 @@ export async function selectFilename(directory: Uri) {
             }
           }
 
-          selectedFileName = value;
+          selectedFilename = value;
           input.validationMessage = undefined;
           error = false;
         })
@@ -225,9 +201,9 @@ export async function selectFilename(directory: Uri) {
 
       disposables.push(
         input.onDidAccept(() => {
-          if (!selectedFileName || error) return;
+          if (!selectedFilename || error) return;
 
-          resolve(selectedFileName);
+          resolve([selectedFilename, selectedFilepath]);
           input.hide();
         })
       );
@@ -244,6 +220,44 @@ export async function selectFilename(directory: Uri) {
   } finally {
     disposables.map((disposable) => disposable.dispose());
   }
+}
+
+function getFocusedDocument() {
+  const focusedDocument = window.activeTextEditor?.document;
+
+  if (focusedDocument && !focusedDocument.isUntitled) return focusedDocument;
+
+  return null;
+}
+
+export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
+  const relativePattern = new RelativePattern(workspaceFolder, "**/*.csproj");
+
+  const uris = await workspace.findFiles(relativePattern);
+
+  if (!uris || uris.length < 1) throw new Error("No C# projects could be found in the selected workspace");
+
+  return uris;
+}
+
+async function getDirectories(directoryUri: Uri, directories: Uri[] = []) {
+  const entries = await workspace.fs.readDirectory(directoryUri);
+  const directoryNames = entries
+    .filter(
+      ([name, type]) => type === FileType.Directory && EXCLUDED_DIRECTORIES.every((excludedDir) => excludedDir !== name)
+    )
+    .map((i) => i[0]);
+
+  for (const directoryName of directoryNames) {
+    const fullpath = path.join(directoryUri.fsPath, directoryName);
+    const uri = Uri.parse(fullpath);
+
+    directories.push(uri);
+
+    await getDirectories(uri, directories);
+  }
+
+  return directories;
 }
 
 export async function openDocument(filepath: string): Promise<TextDocument> {

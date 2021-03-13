@@ -14,4 +14,4 @@ jobs:
           node-version: 12
       - run: npm ci
       - run: npm install -g vsce
-      - run: vsce publish -p ${{ secrets.PUBLISHER_TOKEN }}
+      - run: vsce publish ${{ github.event.release.tag_name }} -p ${{ secrets.PUBLISHER_TOKEN }}

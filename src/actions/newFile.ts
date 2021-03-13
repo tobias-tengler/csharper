@@ -9,15 +9,17 @@ import { OutputChannel, Uri } from "vscode";
 import * as vscode from "vscode";
 
 // todo: settings for no namespace and wether to include subdir in namespace
-export default async function newFile(outputChannel: OutputChannel, directoryPathFromContextMenu?: string) {
+export async function newFile(outputChannel: OutputChannel, directoryPathFromContextMenu?: string) {
   const [targetWorkspace, origin] = await getWorkspace(directoryPathFromContextMenu);
 
   const projectFiles = await getProjectFileUris(targetWorkspace);
 
-  let projectFile: Uri | null;
+  let projectFile: Uri | null = null;
   if (origin) {
     projectFile = getNearestProjectFile(projectFiles, origin);
-  } else {
+  }
+
+  if (!projectFile) {
     projectFile = await selectProject(projectFiles);
   }
 

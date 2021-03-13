@@ -1,5 +1,5 @@
+import { newFile } from "./actions/newFile";
 import * as vscode from "vscode";
-import newFile from "./actions/newFile";
 
 export function activate(context: vscode.ExtensionContext) {
   const channel = vscode.window.createOutputChannel("CSharper");

@@ -3,90 +3,95 @@ import * as path from "path";
 import {
   showDocumentFromFile,
   openDocument,
-  selectFilename,
+  selectFilename as selectFile,
   selectTemplate,
   selectDirectory,
   selectCurrentWorkspace,
   getProjectFileUris,
   selectProject,
 } from "../vsHelpers";
-import { SnippetString, window } from "vscode";
 import { getTemplates } from "../templates";
 import * as vscode from "vscode";
 
 async function getWorkspace(
   directoryPath: string | null
-): Promise<[workspace: vscode.WorkspaceFolder, origin: string | null]> {
+): Promise<[workspace: vscode.WorkspaceFolder, origin: vscode.Uri | null]> {
   if (directoryPath) {
-    const workspaceFromDirectory = vscode.workspace.getWorkspaceFolder(vscode.Uri.parse(directoryPath));
+    const directoryPathUri = vscode.Uri.parse(directoryPath);
+    const workspaceFromDirectory = vscode.workspace.getWorkspaceFolder(directoryPathUri);
 
     if (!workspaceFromDirectory) throw new Error("Workspace could not be determined from directory");
 
-    return [workspaceFromDirectory, directoryPath];
+    return [workspaceFromDirectory, directoryPathUri];
   } else {
     return await selectCurrentWorkspace();
   }
 }
 
-async function getProjectFile(projectFiles: string[], origin: string | null) {
+async function getProjectFile(projectFiles: vscode.Uri[], origin: vscode.Uri | null) {
   if (origin) {
-    // todo: determine project file closest to origin
-    return "";
-  }
+    let nearestProjectFile: vscode.Uri | null = null;
+    let nearestProjectFileSubstringLength = origin.fsPath.length;
 
-  if (projectFiles.length === 1) return projectFiles[0];
+    for (const projectFile of projectFiles) {
+      const projectFileDir = path.dirname(projectFile.fsPath);
+
+      const substringLength = origin.fsPath.replace(projectFileDir, "").length;
+
+      if (substringLength < nearestProjectFileSubstringLength) {
+        nearestProjectFile = projectFile;
+        nearestProjectFileSubstringLength = substringLength;
+      }
+    }
+
+    if (nearestProjectFile) return nearestProjectFile;
+  }
+  // else if (projectFiles.length === 1) return projectFiles[0];
 
   return await selectProject(projectFiles);
 }
 
-export default async function newFile(contextMenuPath: string | null): Promise<void> {
-  const [targetWorkspace, origin] = await getWorkspace(contextMenuPath);
+export default async function newFile(directoryPathFromContextMenu: string | null): Promise<void> {
+  const [targetWorkspace, origin] = await getWorkspace(directoryPathFromContextMenu);
 
   const projectFiles = await getProjectFileUris(targetWorkspace);
 
   const projectFile = await getProjectFile(projectFiles, origin);
 
+  let originDirectory = origin;
+  if (!directoryPathFromContextMenu) {
+    originDirectory = await selectDirectory(origin);
+  }
+
+  if (!originDirectory) throw new Error("Origin directory could not be determined");
+
+  console.log({ originDirectory: originDirectory.fsPath, projectFile: projectFile.fsPath });
+
   const templates = getTemplates();
 
-  const selectedTemplate = await selectTemplate(templates);
+  const template = await selectTemplate(templates);
 
-  // console.log(`Creating new '${selectedTemplate.label}' in '${contextMenuPath}' ...`);
+  const [filename, filepath] = await selectFile(originDirectory);
 
-  // let filename, filepath;
+  console.log(`Creating new '${template.label}' in '${filepath}' ...`);
 
-  // filename = await selectFilename(directoryPath);
+  const namespace = getNamespace(projectFile.fsPath, filepath);
 
-  // console.log("Filename:", filename);
+  if (namespace === null) throw new Error("Namespace of C# Project could not be determined");
 
-  // filepath = path.join(directoryPath, filename + ".cs");
+  const templateDocument = await openDocument(template.uri.fsPath);
+  const templateContent = templateDocument
+    .getText()
+    .replace(/\${name}/g, filename)
+    .replace(/\${namespace}/g, namespace);
 
-  // const projectFile = getProjectFile();
+  fs.closeSync(fs.openSync(filepath, "w"));
 
-  // if (projectFile === null) {
-  //   window.showWarningMessage("C# Project File could not be determined");
-  //   return;
-  // }
+  const editor = await showDocumentFromFile(filepath);
 
-  // const namespace = getNamespace(projectFile, filepath);
+  editor.insertSnippet(new vscode.SnippetString(templateContent));
 
-  // if (namespace === null) {
-  //   window.showWarningMessage("Namespace of C# Project could not be determined");
-  //   return;
-  // }
-
-  // const templateDocument = await openDocument(selectedTemplate.path);
-  // const templateContent = templateDocument
-  //   .getText()
-  //   .replace(/\${name}/g, filename)
-  //   .replace(/\${namespace}/g, namespace);
-
-  // fs.closeSync(fs.openSync(filepath, "w"));
-
-  // const editor = await showDocumentFromFile(filepath);
-
-  // editor.insertSnippet(new SnippetString(templateContent));
-
-  // console.log("Successfully created file!");
+  console.log("Successfully created file!");
 }
 
 export function getNamespace(projectFile: string, filepath: string): string {

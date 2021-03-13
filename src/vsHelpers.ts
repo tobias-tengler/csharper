@@ -15,13 +15,13 @@ function getFocusedDocument() {
   return null;
 }
 
-export async function selectCurrentWorkspace(): Promise<[workspace: WorkspaceFolder, origin: string | null]> {
+export async function selectCurrentWorkspace(): Promise<[workspace: WorkspaceFolder, origin: Uri | null]> {
   const focusedDocument = getFocusedDocument();
 
   if (focusedDocument) {
     const workspaceFromDocument = workspace.getWorkspaceFolder(focusedDocument.uri);
 
-    if (workspaceFromDocument) return [workspaceFromDocument, focusedDocument.uri.fsPath];
+    if (workspaceFromDocument) return [workspaceFromDocument, focusedDocument.uri];
   }
 
   const workspaces = workspace.workspaceFolders;
@@ -37,11 +37,6 @@ export async function selectCurrentWorkspace(): Promise<[workspace: WorkspaceFol
   return [selectedWorkspace, null];
 }
 
-export async function selectProject(uris: string[]) {
-  // todo: implement
-  return "";
-}
-
 export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
   const relativePattern = new RelativePattern(workspaceFolder, "**/*.csproj");
 
@@ -49,7 +44,7 @@ export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
 
   if (!uris || uris.length < 1) throw new Error("No C# projects could be found in the selected workspace");
 
-  return uris.map((i) => i.fsPath);
+  return uris;
 }
 
 async function getDirectories(workspaceFolder: WorkspaceFolder, directories: string[] = []) {
@@ -81,57 +76,72 @@ async function getDirectories(workspaceFolder: WorkspaceFolder, directories: str
   // return directories;
 }
 
-function getPathItemFromPath(input: string, baseDir: string): PathItem {
-  return {
-    path: input,
-    label: path.basename(input),
-    description: input.replace(baseDir, ""),
-  };
+export async function selectProject(projectFiles: Uri[]): Promise<Uri> {
+  const projectItems = projectFiles.map((projectFile) => {
+    const filename = path.basename(projectFile.fsPath);
+    const projectName = filename.replace(".csproj", "");
+
+    const item: PathItem = {
+      label: projectName,
+      description: workspace.asRelativePath(projectFile),
+      uri: projectFile,
+    };
+
+    return item;
+  });
+
+  const selectedProject = await window.showQuickPick(projectItems);
+
+  if (!selectedProject) throw new Error("No project was selected");
+
+  return selectedProject.uri;
 }
 
-export async function selectDirectory() {
-  const disposables: Disposable[] = [];
+export async function selectDirectory(originDirectory: Uri | null) {
+  return Uri.parse("");
 
-  try {
-    return await new Promise<string>(async (resolve, reject) => {
-      // const currentWorkspace = await selectCurrentWorkspace();
-      // const projectFileUris = await getProjectFileUris(currentWorkspace);
-      // console.log({ projectFileUris });
-      // const quickpick = window.createQuickPick<PathItem>();
-      // quickpick.ignoreFocusOut = true;
-      // quickpick.canSelectMany = false;
-      // quickpick.title = TITLE;
-      // quickpick.placeholder = `Search for directory in workspace '${currentWorkspace.name}'`;
-      // quickpick.step = 1;
-      // quickpick.totalSteps = TOTAL_STEPS;
-      // todo: this could maybe be lazy
-      // const directories = await getDirectories(currentWorkspace);
-      // const directoryItems = directories.map((directory) =>
-      //   getPathItemFromPath(directory, currentWorkspace.uri.fsPath)
-      // );
-      // console.log("directories", directories);
-      // const focusedDocument = getFocusedDocument();
-      // if (focusedDocument) {
-      //   const focusedDocumentDir = path.dirname(focusedDocument.uri.fsPath);
-      //   const item = getPathItemFromPath(focusedDocumentDir, "");
-      //   item.description = "Directory of focused document";
-      //   item.alwaysShow = true;
-      //   item.picked = true;
-      //   quickpick.items = [item, ...directoryItems];
-      // } else {
-      //   quickpick.items = directoryItems;
-      // }
-      // disposables.push(
-      //   quickpick.onDidHide(() => {
-      //     reject();
-      //     quickpick.dispose();
-      //   })
-      // );
-      // quickpick.show();
-    });
-  } finally {
-    disposables.map((disposable) => disposable.dispose());
-  }
+  // const disposables: Disposable[] = [];
+
+  // try {
+  //   return await new Promise<string>(async (resolve, reject) => {
+  //     // const currentWorkspace = await selectCurrentWorkspace();
+  //     // const projectFileUris = await getProjectFileUris(currentWorkspace);
+  //     // console.log({ projectFileUris });
+  //     // const quickpick = window.createQuickPick<PathItem>();
+  //     // quickpick.ignoreFocusOut = true;
+  //     // quickpick.canSelectMany = false;
+  //     // quickpick.title = TITLE;
+  //     // quickpick.placeholder = `Search for directory in workspace '${currentWorkspace.name}'`;
+  //     // quickpick.step = 1;
+  //     // quickpick.totalSteps = TOTAL_STEPS;
+  //     // todo: this could maybe be lazy
+  //     // const directories = await getDirectories(currentWorkspace);
+  //     // const directoryItems = directories.map((directory) =>
+  //     //   getPathItemFromPath(directory, currentWorkspace.uri.fsPath)
+  //     // );
+  //     // console.log("directories", directories);
+  //     // const focusedDocument = getFocusedDocument();
+  //     // if (focusedDocument) {
+  //     //   const focusedDocumentDir = path.dirname(focusedDocument.uri.fsPath);
+  //     //   const item = getPathItemFromPath(focusedDocumentDir, "");
+  //     //   item.description = "Directory of focused document";
+  //     //   item.alwaysShow = true;
+  //     //   item.picked = true;
+  //     //   quickpick.items = [item, ...directoryItems];
+  //     // } else {
+  //     //   quickpick.items = directoryItems;
+  //     // }
+  //     // disposables.push(
+  //     //   quickpick.onDidHide(() => {
+  //     //     reject();
+  //     //     quickpick.dispose();
+  //     //   })
+  //     // );
+  //     // quickpick.show();
+  //   });
+  // } finally {
+  //   disposables.map((disposable) => disposable.dispose());
+  // }
 }
 
 export async function selectTemplate(templates: PathItem[]) {
@@ -172,7 +182,7 @@ export async function selectTemplate(templates: PathItem[]) {
   }
 }
 
-export async function selectFilename(directoryPath: string) {
+export async function selectFilename(directory: Uri) {
   const disposables: Disposable[] = [];
 
   try {
@@ -197,7 +207,7 @@ export async function selectFilename(directoryPath: string) {
               return;
             }
 
-            const filepath = path.join(directoryPath, value + ".cs");
+            const filepath = path.join(directory.fsPath, value + ".cs");
 
             if (existsSync(filepath)) {
               input.validationMessage = "File already exists";

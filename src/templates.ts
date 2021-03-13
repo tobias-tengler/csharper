@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { extensions } from "vscode";
+import { extensions, Uri } from "vscode";
 import { PathItem } from "./types/PathItem";
 
 function getExtensionPath(): string | null {
@@ -23,7 +23,7 @@ export function getTemplates() {
   return templateFiles
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
     .map<PathItem>((templateFile) => ({
-      path: path.join(templateDir, templateFile),
+      uri: Uri.parse(path.join(templateDir, templateFile)),
       label: templateFile.replace(/(^\d+\s)/, ""),
     }));
 }

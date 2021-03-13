@@ -1,5 +1,5 @@
-import { QuickPickItem } from "vscode";
+import { QuickPickItem, Uri } from "vscode";
 
 export interface PathItem extends QuickPickItem {
-  path: string;
+  uri: Uri;
 }

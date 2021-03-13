@@ -1,0 +1,19 @@
+using HotChocolate.Types;
+
+namespace ${namespace}
+{
+    public class ${name} : ObjectType<${1:Entity}>
+    {
+        protected override void Configure(IObjectTypeDescriptor<${1:Entity}> descriptor)
+        {
+            descriptor.Name("${2:Name}");
+
+            descriptor.Field(i => i.${3:Property})
+                .Type<${4}>()
+                .Resolve(context =>
+                {
+                    ${0}
+                });
+        }
+    }
+}

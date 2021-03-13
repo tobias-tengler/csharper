@@ -16,8 +16,10 @@ export function getTemplates(): TemplateFile[] {
 
   const templateFiles = fs.readdirSync(templateDir);
 
-  return templateFiles.map((templateFile) => ({
-    filepath: path.join(templateDir, templateFile),
-    label: templateFile,
-  }));
+  return templateFiles
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map((templateFile) => ({
+      filepath: path.join(templateDir, templateFile),
+      label: templateFile.replace(/(^\d+\s)/, ""),
+    }));
 }

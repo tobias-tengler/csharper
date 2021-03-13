@@ -39,7 +39,8 @@
       "explorer/context": [
         {
           "group": "navigation@-1",
-          "command": "csharper.newFile"
+          "command": "csharper.newFile",
+          "when": "explorerResourceIsFolder"
         }
       ]
     }

@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { extensions } from "vscode";
-import { TemplateFile } from "./types/TemplateFile";
+import { PathItem } from "./types/PathItem";
 
 function getExtensionPath(): string | null {
   return extensions.getExtension("tobiastengler.csharper")?.extensionPath ?? null;
@@ -15,15 +15,15 @@ function getTemplateDir() {
   return path.join(extensionPath, "templates");
 }
 
-export function getTemplates(): TemplateFile[] {
+export function getTemplates() {
   const templateDir = getTemplateDir();
 
   const templateFiles = fs.readdirSync(templateDir);
 
   return templateFiles
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-    .map((templateFile) => ({
-      filepath: path.join(templateDir, templateFile),
+    .map<PathItem>((templateFile) => ({
+      path: path.join(templateDir, templateFile),
       label: templateFile.replace(/(^\d+\s)/, ""),
     }));
 }

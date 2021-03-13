@@ -1,68 +1,92 @@
 import * as fs from "fs";
 import * as path from "path";
-import { showDocumentFromFile, openDocument, selectFilename, selectTemplate, selectDirectory } from "../vsHelpers";
+import {
+  showDocumentFromFile,
+  openDocument,
+  selectFilename,
+  selectTemplate,
+  selectDirectory,
+  selectCurrentWorkspace,
+  getProjectFileUris,
+  selectProject,
+} from "../vsHelpers";
 import { SnippetString, window } from "vscode";
 import { getTemplates } from "../templates";
+import * as vscode from "vscode";
 
-export default async function newFile(directoryPath: string | null): Promise<void> {
-  let fromContext = true;
+async function getWorkspace(
+  directoryPath: string | null
+): Promise<[workspace: vscode.WorkspaceFolder, origin: string | null]> {
+  if (directoryPath) {
+    const workspaceFromDirectory = vscode.workspace.getWorkspaceFolder(vscode.Uri.parse(directoryPath));
 
-  if (!directoryPath) {
-    directoryPath = await selectDirectory();
-    fromContext = false;
+    if (!workspaceFromDirectory) throw new Error("Workspace could not be determined from directory");
+
+    return [workspaceFromDirectory, directoryPath];
+  } else {
+    return await selectCurrentWorkspace();
+  }
+}
+
+async function getProjectFile(projectFiles: string[], origin: string | null) {
+  if (origin) {
+    // todo: determine project file closest to origin
+    return "";
   }
 
-  if (!directoryPath) {
-    console.warn("Directory could not be determined");
-    return;
-  }
+  if (projectFiles.length === 1) return projectFiles[0];
+
+  return await selectProject(projectFiles);
+}
+
+export default async function newFile(contextMenuPath: string | null): Promise<void> {
+  const [targetWorkspace, origin] = await getWorkspace(contextMenuPath);
+
+  const projectFiles = await getProjectFileUris(targetWorkspace);
+
+  const projectFile = await getProjectFile(projectFiles, origin);
 
   const templates = getTemplates();
 
-  const selectedTemplate = await selectTemplate(templates, fromContext);
+  const selectedTemplate = await selectTemplate(templates);
 
-  console.log(`Creating new '${selectedTemplate.label}' in '${directoryPath}' ...`);
+  // console.log(`Creating new '${selectedTemplate.label}' in '${contextMenuPath}' ...`);
 
-  let filename, filepath;
+  // let filename, filepath;
 
-  filename = await selectFilename(directoryPath, fromContext);
+  // filename = await selectFilename(directoryPath);
 
-  console.log("Filename:", filename);
+  // console.log("Filename:", filename);
 
-  filepath = path.join(directoryPath, filename + ".cs");
+  // filepath = path.join(directoryPath, filename + ".cs");
 
-  const projectFile = getProjectFile();
+  // const projectFile = getProjectFile();
 
-  if (projectFile === null) {
-    window.showWarningMessage("C# Project File could not be determined");
-    return;
-  }
+  // if (projectFile === null) {
+  //   window.showWarningMessage("C# Project File could not be determined");
+  //   return;
+  // }
 
-  const namespace = getNamespace(projectFile, filepath);
+  // const namespace = getNamespace(projectFile, filepath);
 
-  if (namespace === null) {
-    window.showWarningMessage("Namespace of C# Project could not be determined");
-    return;
-  }
+  // if (namespace === null) {
+  //   window.showWarningMessage("Namespace of C# Project could not be determined");
+  //   return;
+  // }
 
-  const templateDocument = await openDocument(selectedTemplate.filepath);
-  const templateContent = templateDocument
-    .getText()
-    .replace(/\${name}/g, filename)
-    .replace(/\${namespace}/g, namespace);
+  // const templateDocument = await openDocument(selectedTemplate.path);
+  // const templateContent = templateDocument
+  //   .getText()
+  //   .replace(/\${name}/g, filename)
+  //   .replace(/\${namespace}/g, namespace);
 
-  fs.closeSync(fs.openSync(filepath, "w"));
+  // fs.closeSync(fs.openSync(filepath, "w"));
 
-  const editor = await showDocumentFromFile(filepath);
+  // const editor = await showDocumentFromFile(filepath);
 
-  editor.insertSnippet(new SnippetString(templateContent));
+  // editor.insertSnippet(new SnippetString(templateContent));
 
-  console.log("Successfully created file!");
-}
-
-export function getProjectFile() {
-  // todo: implement
-  return "";
+  // console.log("Successfully created file!");
 }
 
 export function getNamespace(projectFile: string, filepath: string): string {

@@ -97,10 +97,13 @@ function getPathItemFromUri(uri: Uri): PathItem {
 
 function addRelativePathDescription(item: PathItem) {
   const relativePath = vscode.workspace.asRelativePath(item.uri, false);
+  const pathSegments = relativePath.split(path.sep);
 
-  if (!relativePath.includes(path.sep)) return;
-
-  item.description = relativePath;
+  if (pathSegments.length === 1) {
+    item.description = relativePath;
+  } else {
+    item.description = path.join(...pathSegments.slice(0, pathSegments.length - 1));
+  }
 }
 
 async function getDirectories(directoryUri: Uri, directories: Uri[] = []) {

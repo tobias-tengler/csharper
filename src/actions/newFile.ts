@@ -80,7 +80,5 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
     editor.insertSnippet(snippetString);
   }
 
-  await newDocument.save();
-
   outputChannel.appendLine("Successfully created new file!");
 }

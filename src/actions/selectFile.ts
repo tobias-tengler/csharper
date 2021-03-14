@@ -29,7 +29,9 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
           error = false;
 
           if (!value) {
-            filename = "";
+            input.validationMessage = "Filename can not be empty";
+            error = true;
+
             return;
           }
 
@@ -42,16 +44,10 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
 
           // todo: pathsegments should not be csharp keywords
           const pathSegments = value.replace(/^\/+/, "").replace(/\/+$/, "").split("/");
+          const lastSegmentIndex = pathSegments.length - 1;
 
-          if (pathSegments.length === 1) {
-            filename = pathSegments[0];
-            fileUri = Uri.joinPath(directory, pathSegments[0] + ".cs");
-          } else {
-            filename = pathSegments[pathSegments.length - 1];
-            const filepath = path.join(directory.fsPath, ...pathSegments) + ".cs";
-
-            fileUri = Uri.file(filepath);
-          }
+          filename = withNamingRules(pathSegments[lastSegmentIndex], isInterface);
+          fileUri = Uri.joinPath(directory, ...pathSegments.slice(0, lastSegmentIndex), filename + ".cs");
 
           if (fs.existsSync(fileUri.fsPath)) {
             input.validationMessage = "File already exists";
@@ -65,8 +61,6 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
       disposables.push(
         input.onDidAccept(() => {
           if (!filename || error) return;
-
-          filename = withNamingRules(filename, isInterface);
 
           resolve([filename, fileUri]);
           input.hide();

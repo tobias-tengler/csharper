@@ -17,7 +17,8 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
 
       const input = vscode.window.createInputBox();
       input.ignoreFocusOut = true;
-      input.prompt = "Enter a Filename (without an extension)";
+      input.prompt = "Enter a Filename";
+      input.placeholder = "Filename";
       input.title = TITLE;
       input.step = 4;
       input.totalSteps = TOTAL_STEPS;

@@ -49,7 +49,7 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
   if (includeNamespace) {
     const includeSubdirectoriesInNamespace = vscode.workspace
       .getConfiguration("csharper")
-      .get<boolean>("includeSubdirectoriesInNamespace", false);
+      .get<boolean>("includeSubdirectoriesInNamespace", true);
 
     const namespace = getProjectNamespace(projectFile.fsPath, filepath.fsPath, includeSubdirectoriesInNamespace);
 

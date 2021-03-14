@@ -1,8 +1,7 @@
 import { Disposable, Uri } from "vscode";
-import { TITLE, TOTAL_STEPS } from "../constants";
+import { CSHARP_KEYWORDS, TITLE, TOTAL_STEPS } from "../constants";
 import * as vscode from "vscode";
 import * as fs from "fs";
-import * as path from "path";
 
 type FileResult = [filename: string, filepath: Uri];
 
@@ -36,14 +35,21 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
           }
 
           if (!/^[a-zA-Z0-9_\/]+$/.test(value)) {
-            input.validationMessage = "Name contains invalid characters";
+            input.validationMessage = "Filename contains invalid characters";
             error = true;
 
             return;
           }
 
-          // todo: pathsegments should not be csharp keywords
           const pathSegments = value.replace(/^\/+/, "").replace(/\/+$/, "").split("/");
+
+          if (pathSegments.some((pathSegment) => CSHARP_KEYWORDS.includes(pathSegment))) {
+            input.validationMessage = "Filename contains reserved C# keywords";
+            error = true;
+
+            return;
+          }
+
           const lastSegmentIndex = pathSegments.length - 1;
 
           filename = withNamingRules(pathSegments[lastSegmentIndex], isInterface);

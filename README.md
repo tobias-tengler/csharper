@@ -15,6 +15,8 @@ After selecting a template and a filename the templated file will be created in 
 <!-- todo: cut gif and better quality -->
 <img src="assets/context-menu.gif" alt="Create C# files from the Explorer Context Menu" />
 
+**Tip**: You can create new subdirectories by including a path seperator (`/`) in your chose filename.
+
 ## Create C# files using a shortcut
 
 If you prefer to only use your keyboard, there is also a new shortcut: `Ctrl+J Ctrl+J`

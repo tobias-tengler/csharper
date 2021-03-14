@@ -40,14 +40,8 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
             return;
           }
 
-          if (value.startsWith("/") || value.endsWith("/")) {
-            input.validationMessage = "Name can not start or end in a path seperator";
-            error = true;
-
-            return;
-          }
-
-          const pathSegments = value.split("/");
+          // todo: pathsegments should not be csharp keywords
+          const pathSegments = value.replace(/^\/+/, "").replace(/\/+$/, "").split("/");
 
           if (pathSegments.length === 1) {
             filename = pathSegments[0];

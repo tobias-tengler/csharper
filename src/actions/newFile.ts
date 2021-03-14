@@ -13,13 +13,19 @@ import * as vscode from "vscode";
 export async function newFile(outputChannel: OutputChannel, directoryPathFromContextMenu?: string) {
   const configuration = vscode.workspace.getConfiguration("csharper");
 
-  const [workspace, origin] = await getWorkspace(directoryPathFromContextMenu);
+  let [workspace, origin] = await getWorkspace(directoryPathFromContextMenu);
 
   const projectFiles = await getProjectFileUris(workspace);
 
   let projectFile: Uri | null = null;
   if (origin) {
-    projectFile = getNearestProjectFile(projectFiles, origin);
+    const respectFocusedDocument = configuration.get<boolean>("respectFocusedDocument", true);
+
+    if (directoryPathFromContextMenu || respectFocusedDocument) {
+      projectFile = getNearestProjectFile(projectFiles, origin);
+    } else if (!respectFocusedDocument) {
+      origin = null;
+    }
   }
 
   if (!projectFile) {

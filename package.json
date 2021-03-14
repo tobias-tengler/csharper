@@ -56,6 +56,11 @@
           "type": "boolean",
           "default": true,
           "description": "Include subdirectories in namespace"
+        },
+        "csharper.respectFocusedDocument": {
+          "type": "boolean",
+          "default": true,
+          "description": "Select project closest to focused document automatically"
         }
       }
     }

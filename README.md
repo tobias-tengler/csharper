@@ -12,10 +12,9 @@ Right clicking a directory now presents a new option: `New C# File`
 
 After selecting a template and a filename the templated file will be created in the selected directory:
 
-<!-- todo: cut gif and better quality -->
-<img src="assets/context-menu.gif" alt="Create C# files from the Explorer Context Menu" />
+<img src="assets/context-menu.gif" alt="Create C# files from the Explorer Context Menu" width=500 />
 
-**Tip**: You can create new subdirectories by including a path seperator (`/`) in your chose filename.
+**Tip**: You can create new subdirectories by including a path seperator (`/`) in your chosen filename.
 
 ## Create C# files using a shortcut
 
@@ -39,7 +38,7 @@ If you are in a workspace folder with multiple project files, the shortcut will 
 
 If you press the shortcut while focusing a document, the nearest project file to that document will be selected per default.
 
-### Selecting the destination directory
+### Destination directory
 
 After the project directory has been determined you need to select the destination directory of your file:
 

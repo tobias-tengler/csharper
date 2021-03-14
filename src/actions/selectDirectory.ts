@@ -6,7 +6,7 @@ import * as path from "path";
 
 export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
   const projectDir = path.dirname(projectUri.fsPath);
-  const projectDirUri = Uri.parse(projectDir);
+  const projectDirUri = Uri.file(projectDir);
 
   let directories = await getDirectories(projectDirUri);
 
@@ -20,7 +20,7 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
     const editorFileDir = path.dirname(editorFileUri.fsPath);
 
     if (editorFileDir !== projectDirUri.fsPath) {
-      const item = getPathItemFromUri(Uri.parse(editorFileDir));
+      const item = getPathItemFromUri(Uri.file(editorFileDir));
       item.detail = "Directory of currently focused file";
 
       directoryItems.push(item);
@@ -112,8 +112,7 @@ async function getDirectories(directoryUri: Uri, directories: Uri[] = []) {
     .map((i) => i[0]);
 
   for (const directoryName of directoryNames) {
-    const fullpath = path.join(directoryUri.fsPath, directoryName);
-    const uri = Uri.parse(fullpath);
+    const uri = Uri.joinPath(directoryUri, directoryName);
 
     directories.push(uri);
 

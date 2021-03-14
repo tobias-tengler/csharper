@@ -1,7 +1,6 @@
 import { Disposable, Uri } from "vscode";
 import { TITLE, TOTAL_STEPS } from "../constants";
 import * as vscode from "vscode";
-import * as path from "path";
 import * as fs from "fs";
 
 type FileResult = [filename: string, filepath: Uri];
@@ -12,7 +11,7 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
   try {
     return await new Promise<FileResult>((resolve, reject) => {
       let filename: string;
-      let filepath: string;
+      let fileUri: Uri;
       let error: boolean;
 
       const input = vscode.window.createInputBox();
@@ -45,9 +44,9 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
               return;
             }
 
-            filepath = path.join(directory.fsPath, value + ".cs");
+            fileUri = Uri.joinPath(directory, value + ".cs");
 
-            if (fs.existsSync(filepath)) {
+            if (fs.existsSync(fileUri.fsPath)) {
               input.validationMessage = "File already exists";
               error = true;
 
@@ -65,7 +64,7 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
         input.onDidAccept(() => {
           if (!filename || error) return;
 
-          resolve([filename, Uri.parse(filepath)]);
+          resolve([filename, fileUri]);
           input.hide();
         })
       );

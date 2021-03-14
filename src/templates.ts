@@ -1,20 +1,19 @@
 import { extensions, Uri } from "vscode";
 import { PathItem } from "./types/PathItem";
-import * as path from "path";
 import * as vscode from "vscode";
 
-function getExtensionPath(): string | null {
-  return extensions.getExtension("tobiastengler.csharper")?.extensionPath ?? null;
+function getExtensionUri(): Uri | null {
+  return extensions.getExtension("tobiastengler.csharper")?.extensionUri ?? null;
 }
 
 function getTemplateDirectory() {
-  const extensionPath = getExtensionPath();
+  const extensionUri = getExtensionUri();
 
-  if (!extensionPath) throw new Error("Extension path could not be determined");
+  if (!extensionUri) throw new Error("Extension path could not be determined");
 
-  const templateDir = path.join(extensionPath, "templates");
+  const templateDir = Uri.joinPath(extensionUri, "templates");
 
-  return Uri.parse(templateDir);
+  return templateDir;
 }
 
 export async function getTemplates() {
@@ -26,7 +25,7 @@ export async function getTemplates() {
     .map((i) => i[0])
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
     .map<PathItem>((templateFile) => ({
-      uri: Uri.parse(path.join(templateDir.fsPath, templateFile)),
+      uri: Uri.joinPath(templateDir, templateFile),
       label: templateFile.replace(/(^\d+\s)/, ""),
     }));
 }

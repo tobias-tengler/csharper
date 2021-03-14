@@ -11,9 +11,11 @@ import { TextEncoder } from "util";
 import * as vscode from "vscode";
 
 export async function newFile(outputChannel: OutputChannel, directoryPathFromContextMenu?: string) {
-  const [targetWorkspace, origin] = await getWorkspace(directoryPathFromContextMenu);
+  const configuration = vscode.workspace.getConfiguration("csharper");
 
-  const projectFiles = await getProjectFileUris(targetWorkspace);
+  const [workspace, origin] = await getWorkspace(directoryPathFromContextMenu);
+
+  const projectFiles = await getProjectFileUris(workspace);
 
   let projectFile: Uri | null = null;
   if (origin) {
@@ -26,30 +28,28 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
 
   if (!projectFile) throw new Error("Project file could not be determined");
 
-  let originDirectory = origin;
+  let destinationDirectory = origin;
   if (!directoryPathFromContextMenu) {
-    originDirectory = await selectDirectory(origin, projectFile);
+    destinationDirectory = await selectDirectory(origin, projectFile);
   }
 
-  if (!originDirectory) throw new Error("Origin directory could not be determined");
+  if (!destinationDirectory) throw new Error("Destination directory could not be determined");
 
   const templates = await getTemplates();
 
   const template = await selectTemplate(templates);
 
-  const [filename, filepath] = await selectFile(originDirectory, template.label === "Interface");
+  const [filename, filepath] = await selectFile(destinationDirectory, template.label === "Interface");
 
   outputChannel.appendLine(`Creating new '${template.label}' in '${filepath}' ...`);
 
   const templateDocument = await vscode.workspace.openTextDocument(template.uri);
   const templateContent = templateDocument.getText().replace(/\${name}/g, filename);
 
-  const includeNamespace = vscode.workspace.getConfiguration("csharper").get<boolean>("includeNamespace", true);
+  const includeNamespace = configuration.get<boolean>("includeNamespace", true);
 
   if (includeNamespace) {
-    const includeSubdirectoriesInNamespace = vscode.workspace
-      .getConfiguration("csharper")
-      .get<boolean>("includeSubdirectoriesInNamespace", true);
+    const includeSubdirectoriesInNamespace = configuration.get<boolean>("includeSubdirectoriesInNamespace", true);
 
     const namespace = getProjectNamespace(projectFile.fsPath, filepath.fsPath, includeSubdirectoriesInNamespace);
 

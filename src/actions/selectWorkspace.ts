@@ -5,7 +5,7 @@ type WorkspaceResult = [workspace: WorkspaceFolder, origin: Uri | null];
 
 export async function getWorkspace(directoryPath?: string): Promise<WorkspaceResult> {
   if (directoryPath) {
-    const directoryPathUri = vscode.Uri.parse(directoryPath);
+    const directoryPathUri = Uri.file(directoryPath);
     const workspaceFromDirectory = vscode.workspace.getWorkspaceFolder(directoryPathUri);
 
     if (!workspaceFromDirectory) throw new Error("Workspace could not be determined from directory");

@@ -5,6 +5,7 @@ import * as fs from "fs";
 
 type FileResult = [filename: string, filepath: Uri];
 
+// todo: create path if name contains /
 export async function selectFile(directory: Uri, isInterface: boolean) {
   const disposables: Disposable[] = [];
 

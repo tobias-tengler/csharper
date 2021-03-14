@@ -42,15 +42,14 @@ export function getProjectNamespace(
   if (!includeSubdirectoriesInNamespace) return rootNamespace;
 
   const rootDirectory = path.dirname(projectFile);
-  let fileDirectory = path.dirname(filepath).replace(rootDirectory, "");
+  const relativePathToFile = path.dirname(filepath).replace(rootDirectory, "");
 
-  if (fileDirectory.length <= 1) {
-    return rootNamespace;
-  }
+  const pathSegments = relativePathToFile
+    .split(path.sep)
+    .filter((segement) => !!segement)
+    .map((segement) => segement.replace(/\W/g, ""));
 
-  if (fileDirectory.startsWith(path.sep)) {
-    fileDirectory = fileDirectory.substring(1);
-  }
+  const namespaceParts = [rootNamespace, ...pathSegments];
 
-  return rootNamespace + "." + fileDirectory.replace(path.sep, ".").replace(/\W/g, "");
+  return namespaceParts.join(".");
 }

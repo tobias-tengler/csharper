@@ -47,7 +47,6 @@ If you press the shortcut while focusing a document, the nearest project file to
 
 After the project directory has been determined you need to select the destination directory of your file:
 
-<!-- todo: editor size is messed up -->
 <img src="assets/select-directory.png" alt="Selecting the destination directory" width=500 />
 
 All directories will be displayed in a flat hierarchy. If there are directories with the same name, the relative path to those directories will also be displayed.

@@ -1,6 +1,14 @@
+# Installation
+
+<!-- todo: this does not work correctly -->
+
+Click [here](vscode://tobiastengler.csharper) to install this extension directly or visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=tobiastengler.csharper).
+
+# Functionality
+
 This extension adds two new ways to create C# files.
 
-# Create C# files from the Explorer Context Menu
+## Create C# files from the Explorer Context Menu
 
 Right clicking a directory now presents a new option: `New C# File`
 
@@ -9,7 +17,7 @@ After selecting a template and a filename the templated file will be created in 
 <!-- todo: cut gif -->
 <img src="assets/context-menu.gif" alt="Create C# files from the Explorer Context Menu" width=500 />
 
-# Create C# files using a shortcut
+## Create C# files using a shortcut
 
 If you prefer to only use your keyboard, there is also a new shortcut: `Ctrl+J Ctrl+J`
 
@@ -21,13 +29,13 @@ Creating a new templated C# file using the shortcut follows the following user f
 
 If there is only one choice or a step is not necessary, it will be skipped in order to save some time.
 
-## Multiple workspace folders
+### Multiple workspace folders
 
 If you have opened a workspace with multiple folders, the shortcut will first prompt you to select one of those workspace folders:
 
 <img src="assets/multiple-workspaces.png" alt="Multiple workspace folders" width=500 />
 
-## Multiple project files
+### Multiple project files
 
 If you are in a workspace folder with multiple project files, the shortcut will prompt you to select one of those projects:
 
@@ -35,7 +43,7 @@ If you are in a workspace folder with multiple project files, the shortcut will 
 
 If you press the shortcut while focusing a document, the nearest project file to that document will be selected per default.
 
-## Selecting the destination directory
+### Selecting the destination directory
 
 After the project directory has been determined you need to select the destination directory of your file:
 

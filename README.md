@@ -1,8 +1,6 @@
 # Installation
 
-<!-- todo: this does not work correctly -->
-
-Click [here](vscode://tobiastengler.csharper) to install this extension directly or visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=tobiastengler.csharper).
+You can install this extension from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=tobiastengler.csharper).
 
 # Functionality
 

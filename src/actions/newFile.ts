@@ -54,7 +54,6 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
 
   const includeNamespace = configuration.get<boolean>("includeNamespace", true);
 
-  // todo: make it so that the file is not written to the fs immediatly
   if (includeNamespace) {
     const includeSubdirectoriesInNamespace = configuration.get<boolean>("includeSubdirectoriesInNamespace", true);
 
@@ -80,6 +79,8 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
   } else {
     editor.insertSnippet(snippetString);
   }
+
+  await newDocument.save();
 
   outputChannel.appendLine("Successfully created new file!");
 }

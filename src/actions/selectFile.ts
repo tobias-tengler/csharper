@@ -2,10 +2,10 @@ import { Disposable, Uri } from "vscode";
 import { TITLE, TOTAL_STEPS } from "../constants";
 import * as vscode from "vscode";
 import * as fs from "fs";
+import * as path from "path";
 
 type FileResult = [filename: string, filepath: Uri];
 
-// todo: create path if name contains /
 export async function selectFile(directory: Uri, isInterface: boolean) {
   const disposables: Disposable[] = [];
 
@@ -25,45 +25,54 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
 
       disposables.push(
         input.onDidChangeValue((value) => {
-          if (value) {
-            const firstCharacter = value[0];
-
-            if (firstCharacter !== firstCharacter.toUpperCase()) {
-              value = value[0].toUpperCase() + value.slice(1);
-
-              input.value = value;
-            } else if (isInterface && value.length > 1 && value[0] !== "I") {
-              value = "I" + value;
-
-              input.value = value;
-            }
-
-            if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-              input.validationMessage = "Name contains invalid characters";
-              error = true;
-
-              return;
-            }
-
-            fileUri = Uri.joinPath(directory, value + ".cs");
-
-            if (fs.existsSync(fileUri.fsPath)) {
-              input.validationMessage = "File already exists";
-              error = true;
-
-              return;
-            }
-          }
-
-          filename = value;
           input.validationMessage = undefined;
           error = false;
+
+          if (!value) {
+            filename = "";
+            return;
+          }
+
+          if (!/^[a-zA-Z0-9_\/]+$/.test(value)) {
+            input.validationMessage = "Name contains invalid characters";
+            error = true;
+
+            return;
+          }
+
+          if (value.startsWith("/") || value.endsWith("/")) {
+            input.validationMessage = "Name can not start or end in a path seperator";
+            error = true;
+
+            return;
+          }
+
+          const pathSegments = value.split("/");
+
+          if (pathSegments.length === 1) {
+            filename = pathSegments[0];
+            fileUri = Uri.joinPath(directory, pathSegments[0] + ".cs");
+          } else {
+            filename = pathSegments[pathSegments.length - 1];
+            const filepath = path.join(directory.fsPath, ...pathSegments) + ".cs";
+
+            fileUri = Uri.file(filepath);
+          }
+
+          if (fs.existsSync(fileUri.fsPath)) {
+            input.validationMessage = "File already exists";
+            error = true;
+
+            return;
+          }
         })
       );
 
       disposables.push(
         input.onDidAccept(() => {
           if (!filename || error) return;
+
+          filename = withNamingRules(filename, isInterface);
 
           resolve([filename, fileUri]);
           input.hide();
@@ -82,4 +91,16 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
   } finally {
     disposables.map((disposable) => disposable.dispose());
   }
+}
+
+function withNamingRules(filename: string, isInterface: boolean) {
+  filename = filename[0].toUpperCase() + filename.slice(1);
+
+  if (isInterface && filename.length > 2) {
+    if (filename[0] !== "I" || filename[1] !== filename[1].toUpperCase()) {
+      filename = "I" + filename;
+    }
+  }
+
+  return filename;
 }

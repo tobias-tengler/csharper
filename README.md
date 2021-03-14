@@ -21,11 +21,7 @@ If you prefer to only use your keyboard, there is also a new shortcut: `Ctrl+J C
 
 As any other keybinding in VS Code `Ctrl+J Ctrl+J` can be remapped to whatever you prefer. The name of the shortcut is `csharper.newFile`.
 
-Creating a new templated C# file using the shortcut follows the following user flow:
-
-`Select workspace folder` > `Select project` > `Select directory` > `Select template` > `Select filename`
-
-If there is only one choice or a step is not necessary, it will be skipped in order to save some time.
+Since the shortcut can be pressed in different contexts, which workspace, project or directory to use, is not always apparent. Based on the context some or none of the following scenarios might apply:
 
 ### Multiple workspace folders
 
@@ -48,6 +44,12 @@ After the project directory has been determined you need to select the destinati
 <img src="assets/select-directory.png" alt="Selecting the destination directory" width=500 />
 
 All directories will be displayed in a flat hierarchy. If there are directories with the same name, the relative path to those directories will also be displayed.
+
+# Available templates
+
+You can check out all of the available templates [here](templates).
+
+If you think that an important template is missing, feel free to create a PR that adds it! :)
 
 # Current Limitations
 

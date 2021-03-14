@@ -14,8 +14,8 @@ Right clicking a directory now presents a new option: `New C# File`
 
 After selecting a template and a filename the templated file will be created in the selected directory:
 
-<!-- todo: cut gif -->
-<img src="assets/context-menu.gif" alt="Create C# files from the Explorer Context Menu" width=500 />
+<!-- todo: cut gif and better quality -->
+<img src="assets/context-menu.gif" alt="Create C# files from the Explorer Context Menu" />
 
 ## Create C# files using a shortcut
 

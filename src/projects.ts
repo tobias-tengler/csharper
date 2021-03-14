@@ -37,7 +37,7 @@ export function getProjectNamespace(
   filepath: string,
   includeSubdirectoriesInNamespace: boolean
 ): string {
-  const rootNamespace = path.basename(projectFile).replace(".csproj", "");
+  const rootNamespace = path.basename(projectFile).replace(".csproj", "").replace(/\W/g, "");
 
   if (!includeSubdirectoriesInNamespace) return rootNamespace;
 
@@ -52,5 +52,5 @@ export function getProjectNamespace(
     fileDirectory = fileDirectory.substring(1);
   }
 
-  return rootNamespace + "." + fileDirectory.replace(path.sep, ".");
+  return rootNamespace + "." + fileDirectory.replace(path.sep, ".").replace(/\W/g, "");
 }

@@ -5,8 +5,6 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 export async function selectProject(projectFiles: Uri[]) {
-  if (projectFiles.length === 1) {return projectFiles[0];}
-
   const projectItems = projectFiles
     .map((projectFile) => {
       const filename = path.basename(projectFile.fsPath);

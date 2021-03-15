@@ -51,12 +51,14 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
           }
 
           const lastSegmentIndex = pathSegments.length - 1;
+          const leadingPathSegments = pathSegments.slice(0, lastSegmentIndex);
 
           filename = withNamingRules(pathSegments[lastSegmentIndex], isInterface);
-          fileUri = Uri.joinPath(directory, ...pathSegments.slice(0, lastSegmentIndex), filename + ".cs");
+          fileUri = Uri.joinPath(directory, ...leadingPathSegments, filename + ".cs");
 
           if (fs.existsSync(fileUri.fsPath)) {
             input.validationMessage = "File already exists";
+            input.value = fileUri.fsPath.replace(directory.fsPath, "").replace(/^\/+/, "").replace(/\.cs$/, "");
             error = true;
 
             return;
@@ -66,7 +68,9 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
 
       disposables.push(
         input.onDidAccept(() => {
-          if (!filename || error) {return;}
+          if (!filename || error) {
+            return;
+          }
 
           resolve([filename, fileUri]);
           input.hide();

@@ -12,7 +12,7 @@ Right clicking a directory now presents a new option: `New C# File`
 
 After selecting a template and a filename the templated file will be created in the selected directory:
 
-<img src="assets/context-menu.gif" alt="Create C# files from the Explorer Context Menu" width=500 />
+<img src="assets/context-menu.gif" alt="Create C# files from the Explorer Context Menu" width=650 />
 
 **Tip**: You can create new subdirectories by including a path seperator (`/`) in your chosen filename.
 
@@ -28,13 +28,13 @@ Since the shortcut can be pressed in different contexts, which workspace, projec
 
 If you have opened a workspace with multiple folders, the shortcut will first prompt you to select one of those workspace folders:
 
-<img src="assets/multiple-workspaces.png" alt="Multiple workspace folders" width=500 />
+<img src="assets/multiple-workspaces.png" alt="Multiple workspace folders" width=650 />
 
 ### Multiple project files
 
 If you are in a workspace folder with multiple project files, the shortcut will prompt you to select one of those projects:
 
-<img src="assets/multiple-projects.png" alt="Multiple project files" width=500 />
+<img src="assets/multiple-projects.png" alt="Multiple project files" width=650 />
 
 If you press the shortcut while focusing a document, the nearest project file to that document will be selected per default.
 
@@ -42,7 +42,7 @@ If you press the shortcut while focusing a document, the nearest project file to
 
 After the project directory has been determined you need to select the destination directory of your file:
 
-<img src="assets/select-directory.png" alt="Selecting the destination directory" width=500 />
+<img src="assets/select-directory.png" alt="Selecting the destination directory" width=650 />
 
 All directories will be displayed in a flat hierarchy. If there are directories with the same name, the relative path to those directories will also be displayed.
 

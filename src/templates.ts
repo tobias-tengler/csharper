@@ -9,7 +9,9 @@ function getExtensionUri(): Uri | null {
 function getTemplateDirectory() {
   const extensionUri = getExtensionUri();
 
-  if (!extensionUri) throw new Error("Extension path could not be determined");
+  if (!extensionUri) {
+    throw new Error("Extension path could not be determined");
+  }
 
   const templateDir = Uri.joinPath(extensionUri, "templates");
 

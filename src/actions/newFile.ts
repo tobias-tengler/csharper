@@ -32,14 +32,14 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
     projectFile = await selectProject(projectFiles);
   }
 
-  if (!projectFile) throw new Error("Project file could not be determined");
+  if (!projectFile) {throw new Error("Project file could not be determined");}
 
   let destinationDirectory = origin;
   if (!directoryPathFromContextMenu) {
     destinationDirectory = await selectDirectory(origin, projectFile);
   }
 
-  if (!destinationDirectory) throw new Error("Destination directory could not be determined");
+  if (!destinationDirectory) {throw new Error("Destination directory could not be determined");}
 
   const templates = await getTemplates();
 
@@ -59,7 +59,7 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
 
     const namespace = getProjectNamespace(projectFile.fsPath, filepath.fsPath, includeSubdirectoriesInNamespace);
 
-    if (namespace === null) throw new Error("Namespace of C# Project could not be determined");
+    if (namespace === null) {throw new Error("Namespace of C# Project could not be determined");}
 
     const namespaceStrig = `namespace ${namespace}${EOL}{${EOL}    ${EOL}}`;
 

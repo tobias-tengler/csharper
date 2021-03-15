@@ -108,3 +108,4 @@ out
 
 # VS Code
 .vscode
+.vscode-test

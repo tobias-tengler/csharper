@@ -66,7 +66,7 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
 
       disposables.push(
         input.onDidAccept(() => {
-          if (!filename || error) return;
+          if (!filename || error) {return;}
 
           resolve([filename, fileUri]);
           input.hide();

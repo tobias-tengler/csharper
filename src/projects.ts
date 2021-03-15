@@ -7,7 +7,9 @@ export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
 
   const uris = await vscode.workspace.findFiles(relativePattern);
 
-  if (!uris || uris.length < 1) throw new Error("No C# projects could be found in the selected workspace");
+  if (!uris || uris.length < 1) {
+    throw new Error("No C# projects could be found in the selected workspace");
+  }
 
   return uris;
 }
@@ -27,7 +29,9 @@ export function getNearestProjectFile(projectFiles: vscode.Uri[], origin: vscode
     }
   }
 
-  if (nearestProjectFile) return nearestProjectFile;
+  if (nearestProjectFile) {
+    return nearestProjectFile;
+  }
 
   return null;
 }
@@ -39,7 +43,9 @@ export function getProjectNamespace(
 ): string {
   const rootNamespace = path.basename(projectFile).replace(".csproj", "").replace(/\W/g, "");
 
-  if (!includeSubdirectoriesInNamespace) return rootNamespace;
+  if (!includeSubdirectoriesInNamespace) {
+    return rootNamespace;
+  }
 
   const rootDirectory = path.dirname(projectFile);
   const relativePathToFile = path.dirname(filepath).replace(rootDirectory, "");

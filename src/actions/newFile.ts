@@ -4,7 +4,13 @@ import { selectFile } from "./selectFile";
 import { selectDirectory } from "./selectDirectory";
 import { selectTemplate } from "./selectTemplate";
 import { selectProject } from "./selectProject";
-import { getNearestProjectFile, getProjectFileUris, getProjectNamespace } from "../projects";
+import {
+  getNamespaceFromFile,
+  getNearestProjectFile,
+  getNeighborWithFileExtension,
+  getProjectFileUris,
+  getProjectNamespace,
+} from "../projects";
 import { OutputChannel, Uri } from "vscode";
 import { EOL } from "os";
 import { TextEncoder } from "util";
@@ -51,9 +57,9 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
 
   const template = await selectTemplate(templates);
 
-  const [filename, filepath] = await selectFile(destinationDirectory, template.label === "Interface");
+  const [filename, fileUri] = await selectFile(destinationDirectory, template.label === "Interface");
 
-  outputChannel.appendLine(`Creating new '${template.label}' in '${filepath}' ...`);
+  outputChannel.appendLine(`Creating new '${template.label}' in '${fileUri}' ...`);
 
   const templateDocument = await vscode.workspace.openTextDocument(template.uri);
   const templateContent = templateDocument.getText().replace(/\${name}/g, filename);
@@ -61,9 +67,28 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
   const includeNamespace = configuration.get<boolean>("includeNamespace", true);
 
   if (includeNamespace) {
-    const includeSubdirectoriesInNamespace = configuration.get<boolean>("includeSubdirectoriesInNamespace", true);
+    let namespace: string | null = null;
 
-    const namespace = getProjectNamespace(projectFile.fsPath, filepath.fsPath, includeSubdirectoriesInNamespace);
+    const useNamespaceOfNeighboringFiles = configuration.get<boolean>("useNamespaceOfNeighboringFiles", true);
+
+    if (useNamespaceOfNeighboringFiles) {
+      const neighborFile = await getNeighborWithFileExtension(fileUri, ".cs");
+
+      if (neighborFile) {
+        const neighborNamespace = await getNamespaceFromFile(neighborFile);
+
+        if (neighborNamespace) {
+          namespace = neighborNamespace;
+        }
+      }
+    }
+
+    if (!namespace) {
+      const includeSubdirectoriesInNamespace = configuration.get<boolean>("includeSubdirectoriesInNamespace", true);
+
+      // todo: split up
+      namespace = getProjectNamespace(projectFile.fsPath, fileUri.fsPath, includeSubdirectoriesInNamespace);
+    }
 
     if (namespace === null) {
       throw new Error("Namespace of C# Project could not be determined");
@@ -73,12 +98,12 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
 
     const utfArray = new TextEncoder().encode(namespaceStrig);
 
-    await vscode.workspace.fs.writeFile(filepath, utfArray);
+    await vscode.workspace.fs.writeFile(fileUri, utfArray);
   } else {
-    await vscode.workspace.fs.writeFile(filepath, new Uint8Array());
+    await vscode.workspace.fs.writeFile(fileUri, new Uint8Array());
   }
 
-  const newDocument = await vscode.workspace.openTextDocument(filepath);
+  const newDocument = await vscode.workspace.openTextDocument(fileUri);
   const editor = await vscode.window.showTextDocument(newDocument);
   const snippetString = new vscode.SnippetString(templateContent);
 

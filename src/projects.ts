@@ -36,6 +36,37 @@ export function getNearestProjectFile(projectFiles: vscode.Uri[], origin: vscode
   return null;
 }
 
+export async function getNeighborWithFileExtension(file: vscode.Uri, extension: string) {
+  const directory = vscode.Uri.file(path.dirname(file.fsPath));
+
+  const files = await vscode.workspace.fs.readDirectory(directory);
+
+  const filesWithExtension = files.filter(
+    ([filename, type]) => type === vscode.FileType.File && filename.endsWith(extension)
+  );
+
+  if (!filesWithExtension || filesWithExtension.length < 1) {
+    return null;
+  }
+
+  const [filename] = filesWithExtension[0];
+
+  return vscode.Uri.joinPath(directory, filename);
+}
+
+export async function getNamespaceFromFile(file: vscode.Uri) {
+  const document = await vscode.workspace.openTextDocument(file);
+  const content = document.getText();
+
+  const match = /(?:namespace\s([^\s]+))/.exec(content);
+
+  if (!match || match.length !== 2) {
+    return null;
+  }
+
+  return match[1];
+}
+
 export function getProjectNamespace(
   projectFile: string,
   filepath: string,

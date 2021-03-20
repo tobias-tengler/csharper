@@ -61,6 +61,11 @@
           "type": "boolean",
           "default": true,
           "description": "Select project closest to focused document automatically"
+        },
+        "csharper.useNamespaceOfNeighboringFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Re-use the namespace of neighboring files"
         }
       }
     }

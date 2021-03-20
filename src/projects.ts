@@ -1,6 +1,7 @@
 import { RelativePattern, WorkspaceFolder } from "vscode";
 import * as vscode from "vscode";
 import * as path from "path";
+import { getTextFromFile } from "./helpers";
 
 export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
   const relativePattern = new RelativePattern(workspaceFolder, "**/*.csproj");
@@ -36,29 +37,15 @@ export function getNearestProjectFile(projectFiles: vscode.Uri[], origin: vscode
   return null;
 }
 
-export async function getNeighborWithFileExtension(file: vscode.Uri, extension: string) {
-  const directory = vscode.Uri.file(path.dirname(file.fsPath));
+export async function getNamespaceFromFile(file: vscode.Uri) {
+  const content = await getTextFromFile(file);
 
-  const files = await vscode.workspace.fs.readDirectory(directory);
-
-  const filesWithExtension = files.filter(
-    ([filename, type]) => type === vscode.FileType.File && filename.endsWith(extension)
-  );
-
-  if (!filesWithExtension || filesWithExtension.length < 1) {
-    return null;
-  }
-
-  const [filename] = filesWithExtension[0];
-
-  return vscode.Uri.joinPath(directory, filename);
+  return getNamespaceFromString(content);
 }
 
-export async function getNamespaceFromFile(file: vscode.Uri) {
-  const document = await vscode.workspace.openTextDocument(file);
-  const content = document.getText();
-
-  const match = /(?:namespace\s([^\s]+))/.exec(content);
+// todo: handle commented out
+function getNamespaceFromString(content: string) {
+  const match = /(?:namespace\s([^\s]+))/gm.exec(content);
 
   if (!match || match.length !== 2) {
     return null;
@@ -67,26 +54,41 @@ export async function getNamespaceFromFile(file: vscode.Uri) {
   return match[1];
 }
 
-export function getProjectNamespace(
-  projectFile: string,
-  filepath: string,
-  includeSubdirectoriesInNamespace: boolean
-): string {
-  const rootNamespace = path.basename(projectFile).replace(".csproj", "").replace(/\W/g, "");
+export async function getRootNamespaceFromProject(projectFile: vscode.Uri) {
+  const content = await getTextFromFile(projectFile);
 
-  if (!includeSubdirectoriesInNamespace) {
-    return rootNamespace;
+  return getRootNamespaceFromString(content);
+}
+
+// todo: handle commented out
+function getRootNamespaceFromString(content: string) {
+  const match = /(?:<RootNamespace>([^<]+)<\/RootNamespace>)/gm.exec(content);
+
+  if (!match || match.length !== 2) {
+    return null;
   }
 
-  const rootDirectory = path.dirname(projectFile);
-  const relativePathToFile = path.dirname(filepath).replace(rootDirectory, "");
+  return match[1];
+}
+
+export function getProjectName(projectFile: vscode.Uri) {
+  return path.basename(projectFile.fsPath).replace(".csproj", "").replace(/\W/g, "");
+}
+
+export function appendPathSegementsToProjectName(
+  projectName: string,
+  projectFile: vscode.Uri,
+  filepath: vscode.Uri
+): string {
+  const projectDirectory = path.dirname(projectFile.fsPath);
+  const relativePathToFile = path.dirname(filepath.fsPath).replace(projectDirectory, "");
 
   const pathSegments = relativePathToFile
     .split(path.sep)
     .filter((segement) => !!segement)
     .map((segement) => segement.replace(/\W/g, ""));
 
-  const namespaceParts = [rootNamespace, ...pathSegments];
+  const namespaceParts = [projectName, ...pathSegments];
 
   return namespaceParts.join(".");
 }

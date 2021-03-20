@@ -5,16 +5,18 @@ import { selectDirectory } from "./selectDirectory";
 import { selectTemplate } from "./selectTemplate";
 import { selectProject } from "./selectProject";
 import {
+  appendPathSegementsToProjectName,
   getNamespaceFromFile,
   getNearestProjectFile,
-  getNeighborWithFileExtension,
   getProjectFileUris,
-  getProjectNamespace,
+  getProjectName,
+  getRootNamespaceFromProject,
 } from "../projects";
 import { OutputChannel, Uri } from "vscode";
 import { EOL } from "os";
 import { TextEncoder } from "util";
 import * as vscode from "vscode";
+import { getNeighborWithFileExtension, getTextFromFile } from "../helpers";
 
 export async function newFile(outputChannel: OutputChannel, directoryPathFromContextMenu?: string) {
   const configuration = vscode.workspace.getConfiguration("csharper");
@@ -61,11 +63,11 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
 
   outputChannel.appendLine(`Creating new '${template.label}' in '${fileUri}' ...`);
 
-  const templateDocument = await vscode.workspace.openTextDocument(template.uri);
-  const templateContent = templateDocument.getText().replace(/\${name}/g, filename);
+  const templateContent = (await getTextFromFile(template.uri)).replace(/\${name}/g, filename);
 
   const includeNamespace = configuration.get<boolean>("includeNamespace", true);
 
+  // todo: i hate this nesting
   if (includeNamespace) {
     let namespace: string | null = null;
 
@@ -84,10 +86,19 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
     }
 
     if (!namespace) {
-      const includeSubdirectoriesInNamespace = configuration.get<boolean>("includeSubdirectoriesInNamespace", true);
+      namespace = await getRootNamespaceFromProject(projectFile);
 
-      // todo: split up
-      namespace = getProjectNamespace(projectFile.fsPath, fileUri.fsPath, includeSubdirectoriesInNamespace);
+      if (!namespace) {
+        namespace = getProjectName(projectFile);
+      }
+
+      if (namespace) {
+        const includeSubdirectories = configuration.get<boolean>("includeSubdirectoriesInNamespace", true);
+
+        if (includeSubdirectories) {
+          namespace = appendPathSegementsToProjectName(namespace, projectFile, fileUri);
+        }
+      }
     }
 
     if (namespace === null) {

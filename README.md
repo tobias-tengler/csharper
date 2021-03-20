@@ -51,7 +51,3 @@ All directories will be displayed in a flat hierarchy. If there are directories 
 You can check out all of the available templates [here](templates).
 
 If you think that an important template is missing, feel free to create a PR that adds it! :)
-
-# Current Limitations
-
-- The `<RootNamespace>` tag in `.csproj` files is currently not taken into account

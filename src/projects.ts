@@ -75,7 +75,7 @@ export function getRootNamespaceFromString(content: string) {
 }
 
 export function getProjectName(projectFile: vscode.Uri) {
-  const filename = path.basename(projectFile.fsPath).replace(".csproj", "")
+  const filename = path.basename(projectFile.fsPath).replace(".csproj", "");
 
   return replaceInvalidNamespaceCharacters(filename) || null;
 }
@@ -86,12 +86,12 @@ export function appendPathSegementsToProjectName(
   filepath: vscode.Uri
 ): string {
   const projectDirectory = path.dirname(projectFile.fsPath);
-  const fileDirectory = path.dirname(filepath.fsPath)
+  const fileDirectory = path.dirname(filepath.fsPath);
 
   const relativePathToFile = fileDirectory.replace(projectDirectory, "");
 
-  if(!relativePathToFile.startsWith(path.sep) || relativePathToFile === fileDirectory) {
-    return projectName
+  if (!relativePathToFile.startsWith(path.sep) || relativePathToFile === fileDirectory) {
+    return projectName;
   }
 
   const pathSegments = relativePathToFile
@@ -108,6 +108,6 @@ export function appendPathSegementsToProjectName(
   return namespaceParts.join(".");
 }
 
-function replaceInvalidNamespaceCharacters(input: string){
-  return input.replace(/[^a-zA-Z0-9\.]/g, "")
+function replaceInvalidNamespaceCharacters(input: string) {
+  return input.replace(/[^a-zA-Z0-9\.]/g, "");
 }

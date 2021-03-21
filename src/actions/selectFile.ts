@@ -44,7 +44,7 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
           const pathSegments = value.replace(/^\/+/, "").replace(/\/+$/, "").split("/");
 
           if (pathSegments.some((pathSegment) => CSHARP_KEYWORDS.includes(pathSegment))) {
-            input.validationMessage = "Filename contains reserved C# keywords";
+            input.validationMessage = "Filename equals reserved C# keyword";
             error = true;
 
             return;

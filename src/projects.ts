@@ -59,9 +59,8 @@ export async function getRootNamespaceFromProject(projectFile: vscode.Uri) {
   return getRootNamespaceFromString(content);
 }
 
-// todo: handle commented out
-function getRootNamespaceFromString(content: string) {
-  const match = /(?:<RootNamespace>([^<]+)<\/RootNamespace>)/gm.exec(content);
+export function getRootNamespaceFromString(content: string) {
+  const match = /(?:^(?!<!--)\s*<RootNamespace>([^<]+)<\/RootNamespace>)/gm.exec(content);
 
   if (!match || match.length !== 2) {
     return null;

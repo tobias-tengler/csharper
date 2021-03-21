@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { getNamespaceFromString, getNearestProjectFile } from "./projects";
+import { getNamespaceFromString, getNearestProjectFile, getRootNamespaceFromString } from "./projects";
 
 suite("getNamespaceFromString", () => {
   test("Namespace", () => {
@@ -39,15 +39,106 @@ suite("getNamespaceFromString", () => {
     assert.strictEqual(namespace, null);
   });
 
-  test("Commented out namespace", () => {
+  test("Namespace commented out", () => {
     const content = `using System;
     // namespace Test
     // {
-      public class Example
-      {
-      }
+    public class Example
+    {
+    }
     // }`;
     const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, null);
+  });
+
+  test("Namespace commented out with block", () => {
+    const content = `using System;
+    /*namespace Test*/
+    
+    public class Example
+    {
+    }`;
+    const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, null);
+  });
+
+  test("Namespace commented out in block", () => {
+    const content = `using System;
+    /*using System;
+    namespace Test
+    {*/
+    public class Example
+    {
+    }`;
+    const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, null);
+  });
+});
+
+suite("getRootNamespaceFromString", () => {
+  test("RootNamespace", () => {
+    const content = `<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+      <OutputType>Exe</OutputType>
+      <TargetFramework>net5.0</TargetFramework>
+      <RootNamespace>Test</RootNamespace>
+    </PropertyGroup>
+  </Project>`;
+    const namespace = getRootNamespaceFromString(content);
+
+    assert.strictEqual(namespace, "Test");
+  });
+
+  test("RootNamespace with dots", () => {
+    const content = `<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+      <OutputType>Exe</OutputType>
+      <TargetFramework>net5.0</TargetFramework>
+      <RootNamespace>Test1.Test2.Test3</RootNamespace>
+    </PropertyGroup>
+  </Project>`;
+    const namespace = getRootNamespaceFromString(content);
+
+    assert.strictEqual(namespace, "Test1.Test2.Test3");
+  });
+
+  test("No RootNamespace", () => {
+    const content = `<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+      <OutputType>Exe</OutputType>
+      <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+  </Project>`;
+    const namespace = getRootNamespaceFromString(content);
+
+    assert.strictEqual(namespace, null);
+  });
+
+  test("RootNamespace commented out", () => {
+    const content = `<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+      <OutputType>Exe</OutputType>
+      <TargetFramework>net5.0</TargetFramework>
+      <!-- <RootNamespace>Test</RootNamespace> -->
+    </PropertyGroup>
+  </Project>`;
+    const namespace = getRootNamespaceFromString(content);
+
+    assert.strictEqual(namespace, null);
+  });
+
+  test("RootNamespace commented out in block", () => {
+    const content = `<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+      <!-- <TargetFramework>net5.0</TargetFramework>
+      <RootNamespace>Test</RootNamespace>
+      <OutputType>Exe</OutputType> -->
+    </PropertyGroup>
+  </Project>`;
+    const namespace = getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
   });

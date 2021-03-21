@@ -1,4 +1,3 @@
-import { OutputChannel, Uri } from "vscode";
 import {
   getDirectoryFromFile,
   getNeighborWithFileExtension,
@@ -21,20 +20,24 @@ import { getTemplates } from "../templates";
 import { selectTemplate } from "./selectTemplate";
 import { selectFile } from "./selectFile";
 import { PathItem } from "../types/PathItem";
-import { TextEncoder } from "node:util";
 import { EOL } from "os";
-import { extensionChannel, getConfiguration } from "../extension";
+import { extensionChannel } from "../extension";
+import { TextEncoder } from "util";
+import {
+  includeNamespace,
+  includeSubdirectoriesInNamespace,
+  respectFocusedDocument,
+  useNamespaceOfNeighboringFiles,
+} from "../configuration";
 
 export function newFileFromCommand(directoryPathFromContextMenu?: string) {
   if (directoryPathFromContextMenu) {
     return newFileFromContextMenu(directoryPathFromContextMenu);
   }
 
-  const respectFocusedDocument = getConfiguration<boolean>("respectFocusedDocument", true);
-
   const focusedDocumentUri = getUriOfFocusedDocument();
 
-  if (respectFocusedDocument && focusedDocumentUri) {
+  if (respectFocusedDocument() && focusedDocumentUri) {
     return newFileFromFocusedDocument(focusedDocumentUri);
   }
 
@@ -42,7 +45,7 @@ export function newFileFromCommand(directoryPathFromContextMenu?: string) {
 }
 
 export async function newFileFromContextMenu(directoryPath: string) {
-  const directory = Uri.file(directoryPath);
+  const directory = vscode.Uri.file(directoryPath);
 
   const workspace = await getWorkspaceFromUri(directory);
 
@@ -63,7 +66,7 @@ export async function newFileFromContextMenu(directoryPath: string) {
   return await newFileFromDirectory(projectFile, directory);
 }
 
-export async function newFileFromFocusedDocument(focusedDocument: Uri) {
+export async function newFileFromFocusedDocument(focusedDocument: vscode.Uri) {
   const workspace = await getWorkspaceFromUri(focusedDocument);
 
   if (!workspace) {
@@ -76,7 +79,7 @@ export async function newFileFromFocusedDocument(focusedDocument: Uri) {
   const projectFile = getNearestProjectFile(projectFiles, focusedDocument);
 
   if (!projectFile) {
-    return await newFileFromWorkspace(workspace);
+    return await newFileFromWorkspace(workspace, null, projectFiles);
   }
 
   const focusedDocumentDirectory = getDirectoryFromFile(focusedDocument);
@@ -84,27 +87,31 @@ export async function newFileFromFocusedDocument(focusedDocument: Uri) {
   return await newFileFromDirectory(projectFile, focusedDocumentDirectory);
 }
 
-export async function newFileFromWorkspace(workspace: vscode.WorkspaceFolder, focusedDocument?: Uri | null) {
-  const projectFiles = await getProjectFileUris(workspace);
+export async function newFileFromWorkspace(
+  workspace: vscode.WorkspaceFolder,
+  focusedDocument?: vscode.Uri | null,
+  projectFiles: vscode.Uri[] = []
+) {
+  projectFiles = projectFiles ?? (await getProjectFileUris(workspace));
 
   const projectFile = await selectProject(projectFiles);
 
   return await newFileFromProject(projectFile, focusedDocument);
 }
 
-export async function newFileFromScratch(focusedDocument?: Uri | null) {
+export async function newFileFromScratch(focusedDocument?: vscode.Uri | null) {
   const workspace = await selectWorkspace();
 
   return await newFileFromWorkspace(workspace, focusedDocument);
 }
 
-export async function newFileFromProject(projectFile: Uri, focusedDocument?: Uri | null) {
+export async function newFileFromProject(projectFile: vscode.Uri, focusedDocument?: vscode.Uri | null) {
   const directory = await selectDirectory(projectFile, focusedDocument);
 
   return await newFileFromDirectory(projectFile, directory);
 }
 
-export async function newFileFromDirectory(projectFile: Uri, directory: Uri) {
+export async function newFileFromDirectory(projectFile: vscode.Uri, directory: vscode.Uri) {
   const templates = await getTemplates();
 
   const template = await selectTemplate(templates);
@@ -112,7 +119,7 @@ export async function newFileFromDirectory(projectFile: Uri, directory: Uri) {
   return await newFileFromTemplate(projectFile, directory, template);
 }
 
-export async function newFileFromTemplate(projectFile: Uri, directory: Uri, template: PathItem) {
+export async function newFileFromTemplate(projectFile: vscode.Uri, directory: vscode.Uri, template: PathItem) {
   const [filename, filePath] = await selectFile(directory, template.label === "Interface");
 
   extensionChannel.appendLine(`Creating new '${template.label}' in '${filePath}' ...`);
@@ -122,7 +129,7 @@ export async function newFileFromTemplate(projectFile: Uri, directory: Uri, temp
   return await newFile(filePath, filename, template.uri, namespace);
 }
 
-export async function newFile(filePath: Uri, filename: string, templatePath: Uri, namespace: string) {
+export async function newFile(filePath: vscode.Uri, filename: string, templatePath: vscode.Uri, namespace: string) {
   // todo: try doing this differently
   const utfArray = new TextEncoder().encode(namespace);
 
@@ -143,19 +150,15 @@ export async function newFile(filePath: Uri, filename: string, templatePath: Uri
 }
 
 // todo: this is badly testable
-export async function getNamespace(projectFile: Uri, filepath: Uri) {
-  const includeNamespace = getConfiguration<boolean>("includeNamespace", true);
-
-  if (!includeNamespace) {
+export async function getNamespace(projectFile: vscode.Uri, filepath: vscode.Uri) {
+  if (!includeNamespace()) {
     return "";
   }
 
   let namespace: string | null = null;
 
-  const useNamespaceOfNeighboringFiles = getConfiguration<boolean>("useNamespaceOfNeighboringFiles", true);
-
   // todo: i dont like the nesting here
-  if (useNamespaceOfNeighboringFiles) {
+  if (useNamespaceOfNeighboringFiles()) {
     const neighborFile = await getNeighborWithFileExtension(filepath, ".cs");
 
     if (neighborFile) {
@@ -175,9 +178,7 @@ export async function getNamespace(projectFile: Uri, filepath: Uri) {
     }
 
     if (namespace) {
-      const includeSubdirectories = getConfiguration<boolean>("includeSubdirectoriesInNamespace", true);
-
-      if (includeSubdirectories) {
+      if (includeSubdirectoriesInNamespace()) {
         namespace = appendPathSegementsToProjectName(namespace, projectFile, filepath);
       }
     }

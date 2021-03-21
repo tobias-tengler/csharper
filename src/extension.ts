@@ -3,12 +3,6 @@ import * as vscode from "vscode";
 
 export const extensionChannel = vscode.window.createOutputChannel("CSharper");
 
-export function getConfiguration<T>(key: string, defaultValue: T) {
-  const configuration = vscode.workspace.getConfiguration("csharper");
-
-  return configuration.get<T>(key, defaultValue);
-}
-
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("csharper.newFile", async (args) => {

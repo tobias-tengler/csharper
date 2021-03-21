@@ -1,7 +1,13 @@
 import { RelativePattern, WorkspaceFolder } from "vscode";
 import * as vscode from "vscode";
 import * as path from "path";
-import { getDirectoryFromFile, getDirectoryName, getRelativePath, getTextFromFile, isFileChildOfDirectory } from "./helpers";
+import {
+  getDirectoryFromFile,
+  getDirectoryName,
+  getRelativePath,
+  getTextFromFile,
+  isFileChildOfDirectory,
+} from "./helpers";
 
 export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
   const relativePattern = new RelativePattern(workspaceFolder, "**/*.csproj");

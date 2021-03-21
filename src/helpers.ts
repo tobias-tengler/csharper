@@ -11,7 +11,6 @@ export function getUriOfFocusedDocument() {
   return null;
 }
 
-
 export async function getTextFromFile(file: vscode.Uri) {
   const document = await vscode.workspace.openTextDocument(file);
 

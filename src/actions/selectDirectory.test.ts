@@ -96,6 +96,29 @@ suite("getDirectoryItems", () => {
     assert.deepStrictEqual(items, expectedItems);
   });
 
+  test("Same directory names (multiple levels)", async () => {
+    const localDirectories: vscode.Uri[] = [vscode.Uri.joinPath(projectDir, "Subdir1/SubSubDir1/test"),
+    vscode.Uri.joinPath(projectDir, "Subdir2/SubSubDir2/test")];
+
+    const items = await getDirectoryItems(projectDir, localDirectories);
+
+    const expectedItems: PathItem[] = [
+      projectDirPathItem,
+      {
+        label: path.basename(localDirectories[0].fsPath),
+        uri: localDirectories[0],
+        description: "Subdir1/SubSubDir1",
+      },
+      {
+        label: path.basename(localDirectories[1].fsPath),
+        uri: localDirectories[1],
+        description: "Subdir2/SubSubDir2",
+      },
+    ];
+
+    assert.deepStrictEqual(items, expectedItems);
+  });
+
   test("Focused file has same directory name", async () => {
     const focusedFile = vscode.Uri.joinPath(projectDir, "Subdir1/SubSubDir2/File.cs");
     const localDirectories: vscode.Uri[] = [...directories, vscode.Uri.joinPath(projectDir, "Subdir1/SubSubDir2")];

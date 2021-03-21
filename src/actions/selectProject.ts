@@ -5,7 +5,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 export async function selectProject(projectFiles: Uri[]) {
-  const projectItems = getProjectPathItems(projectFiles)
+  const projectItems = getProjectPathItems(projectFiles);
 
   const disposables: Disposable[] = [];
 

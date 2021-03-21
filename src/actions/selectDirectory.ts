@@ -14,9 +14,9 @@ import { isFileChildOfDirectory } from "../helpers";
 export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
   const projectDirUri = Uri.file(path.dirname(projectUri.fsPath));
 
-  const directories = await getDirectories(projectDirUri);
+  const directories = await getDirectories(projectDirUri, EXCLUDED_DIRECTORIES);
 
-  const directoryItems = await getDirectoryItems(projectDirUri, directories, editorFileUri, EXCLUDED_DIRECTORIES);
+  const directoryItems = await getDirectoryItems(projectDirUri, directories, editorFileUri);
 
   if (directoryItems.length <= 1 && !editorFileUri) {
     return projectDirUri;
@@ -60,12 +60,7 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
   }
 }
 
-export async function getDirectoryItems(
-  projectDirUri: Uri,
-  directories: Uri[],
-  editorFileUri?: Uri | null,
-  excludedNames: string[] = []
-) {
+export async function getDirectoryItems(projectDirUri: Uri, directories: Uri[], editorFileUri?: Uri | null) {
   const directoryItems: PathItem[] = [];
 
   if (editorFileUri) {
@@ -102,7 +97,7 @@ export async function getDirectoryItems(
     directoryItems.push(item);
   }
 
-  return directoryItems.filter((directoryItem) => !excludedNames.includes(directoryItem.label));
+  return directoryItems;
 }
 
 function getPathItemFromUri(uri: Uri): PathItem {
@@ -115,6 +110,8 @@ function addRelativePathDescription(item: PathItem) {
   const relativePath = vscode.workspace.asRelativePath(item.uri, false);
   const pathSegments = relativePath.split(path.sep);
 
+  console.log("relativePath", relativePath);
+
   if (pathSegments.length === 1) {
     item.description = relativePath;
   } else {
@@ -122,16 +119,18 @@ function addRelativePathDescription(item: PathItem) {
   }
 }
 
-async function getDirectories(directoryUri: Uri, directories: Uri[] = []) {
+async function getDirectories(directoryUri: Uri, excludedNames: string[], directories: Uri[] = []) {
   const entries = await vscode.workspace.fs.readDirectory(directoryUri);
-  const directoryNames = entries.filter(([name, type]) => type === FileType.Directory).map((i) => i[0]);
+  const directoryNames = entries
+    .filter(([name, type]) => type === FileType.Directory && !excludedNames.some((i) => i === name))
+    .map((i) => i[0]);
 
   for (const directoryName of directoryNames) {
     const uri = Uri.joinPath(directoryUri, directoryName);
 
     directories.push(uri);
 
-    await getDirectories(uri, directories);
+    await getDirectories(uri, excludedNames, directories);
   }
 
   return directories;

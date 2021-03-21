@@ -1,6 +1,10 @@
 export const TOTAL_STEPS = 4;
 export const TITLE = "New C# File";
-export const EXCLUDED_DIRECTORIES = ["bin", "obj", "Properties", ".vscode"];
+export const PROJECT_ROOT_LABEL = "Project root directory";
+export const DIRECTORY_OF_FOCUSED_FILE_LABEL = "Directory of currently focused file";
+
+export const EXCLUDED_DIRECTORIES = ["bin", "obj", "Properties", ".vscode", ".git"];
+
 export const CSHARP_KEYWORDS = [
   "abstract",
   "as",

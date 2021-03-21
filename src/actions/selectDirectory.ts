@@ -1,54 +1,25 @@
 import { Disposable, FileType, Uri } from "vscode";
 import { PathItem } from "../types/PathItem";
-import { EXCLUDED_DIRECTORIES, TITLE, TOTAL_STEPS } from "../constants";
+import {
+  DIRECTORY_OF_FOCUSED_FILE_LABEL,
+  EXCLUDED_DIRECTORIES,
+  PROJECT_ROOT_LABEL,
+  TITLE,
+  TOTAL_STEPS,
+} from "../constants";
 import * as vscode from "vscode";
 import * as path from "path";
+import { isFileChildOfDirectory } from "../helpers";
 
 export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
-  const projectDir = path.dirname(projectUri.fsPath);
-  const projectDirUri = Uri.file(projectDir);
+  const projectDirUri = Uri.file(path.dirname(projectUri.fsPath));
 
-  let directories = await getDirectories(projectDirUri);
+  const directories = await getDirectories(projectDirUri);
 
-  if (directories.length < 1 && !editorFileUri) {
+  const directoryItems = await getDirectoryItems(projectDirUri, directories, editorFileUri, EXCLUDED_DIRECTORIES);
+
+  if (directoryItems.length <= 1 && !editorFileUri) {
     return projectDirUri;
-  }
-
-  const directoryItems: PathItem[] = [];
-
-  if (editorFileUri) {
-    const editorFileDir = path.dirname(editorFileUri.fsPath);
-
-    if (editorFileDir !== projectDirUri.fsPath) {
-      const item = getPathItemFromUri(Uri.file(editorFileDir));
-      item.detail = "Directory of currently focused file";
-
-      directoryItems.push(item);
-
-      directories = directories.filter((directory) => directory.fsPath !== editorFileDir);
-    }
-  }
-
-  directoryItems.push({
-    uri: projectDirUri,
-    label: path.basename(projectDirUri.fsPath),
-    detail: "Project root directory",
-  });
-
-  for (const directory of directories) {
-    const item = getPathItemFromUri(directory);
-
-    const itemWithSameLabel = directoryItems.find((i) => i.label === item.label);
-
-    if (itemWithSameLabel) {
-      if (!itemWithSameLabel.description) {
-        addRelativePathDescription(itemWithSameLabel);
-      }
-
-      addRelativePathDescription(item);
-    }
-
-    directoryItems.push(item);
   }
 
   const disposables: Disposable[] = [];
@@ -89,6 +60,51 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
   }
 }
 
+export async function getDirectoryItems(
+  projectDirUri: Uri,
+  directories: Uri[],
+  editorFileUri?: Uri | null,
+  excludedNames: string[] = []
+) {
+  const directoryItems: PathItem[] = [];
+
+  if (editorFileUri) {
+    if (isFileChildOfDirectory(projectDirUri.fsPath, editorFileUri.fsPath)[0]) {
+      const editorFileDir = Uri.file(path.dirname(editorFileUri.fsPath));
+
+      const item = getPathItemFromUri(editorFileDir);
+      item.detail = DIRECTORY_OF_FOCUSED_FILE_LABEL;
+
+      directoryItems.push(item);
+
+      directories = directories.filter((directory) => directory.fsPath !== editorFileDir.fsPath);
+    }
+  }
+
+  directoryItems.push({
+    ...getPathItemFromUri(projectDirUri),
+    detail: PROJECT_ROOT_LABEL,
+  });
+
+  for (const directory of directories) {
+    const item = getPathItemFromUri(directory);
+
+    const itemWithSameLabel = directoryItems.find((i) => i.label === item.label);
+
+    if (itemWithSameLabel) {
+      if (!itemWithSameLabel.description) {
+        addRelativePathDescription(itemWithSameLabel);
+      }
+
+      addRelativePathDescription(item);
+    }
+
+    directoryItems.push(item);
+  }
+
+  return directoryItems.filter((directoryItem) => !excludedNames.includes(directoryItem.label));
+}
+
 function getPathItemFromUri(uri: Uri): PathItem {
   const directoryName = path.basename(uri.fsPath);
 
@@ -108,11 +124,7 @@ function addRelativePathDescription(item: PathItem) {
 
 async function getDirectories(directoryUri: Uri, directories: Uri[] = []) {
   const entries = await vscode.workspace.fs.readDirectory(directoryUri);
-  const directoryNames = entries
-    .filter(
-      ([name, type]) => type === FileType.Directory && EXCLUDED_DIRECTORIES.every((excludedDir) => excludedDir !== name)
-    )
-    .map((i) => i[0]);
+  const directoryNames = entries.filter(([name, type]) => type === FileType.Directory).map((i) => i[0]);
 
   for (const directoryName of directoryNames) {
     const uri = Uri.joinPath(directoryUri, directoryName);

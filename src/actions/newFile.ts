@@ -18,6 +18,7 @@ import { TextEncoder } from "util";
 import * as vscode from "vscode";
 import { getNeighborWithFileExtension, getTextFromFile } from "../helpers";
 
+// todo: this needs heavy testing
 export async function newFile(outputChannel: OutputChannel, directoryPathFromContextMenu?: string) {
   const configuration = vscode.workspace.getConfiguration("csharper");
 

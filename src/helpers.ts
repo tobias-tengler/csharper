@@ -24,3 +24,17 @@ export async function getNeighborWithFileExtension(file: vscode.Uri, extension: 
 
   return vscode.Uri.joinPath(directory, filename);
 }
+
+export function isFileChildOfDirectory(directory: string, file: string): [isChild: boolean, relativePath: string] {
+  const fileDirectory = path.dirname(file);
+
+  const relativePath = fileDirectory.replace(directory, "");
+
+  const isChild = relativePath.startsWith(path.sep) && relativePath !== fileDirectory;
+
+  if (isChild) {
+    return [true, relativePath];
+  }
+
+  return [false, ""];
+}

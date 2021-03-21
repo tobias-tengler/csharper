@@ -1,7 +1,7 @@
 import { RelativePattern, WorkspaceFolder } from "vscode";
 import * as vscode from "vscode";
 import * as path from "path";
-import { getTextFromFile } from "./helpers";
+import { getTextFromFile, isFileChildOfDirectory } from "./helpers";
 
 export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
   const relativePattern = new RelativePattern(workspaceFolder, "**/*.csproj");
@@ -86,15 +86,13 @@ export function appendPathSegementsToProjectName(
   filepath: vscode.Uri
 ): string {
   const projectDirectory = path.dirname(projectFile.fsPath);
-  const fileDirectory = path.dirname(filepath.fsPath);
+  const [isChild, relativePath] = isFileChildOfDirectory(projectDirectory, filepath.fsPath);
 
-  const relativePathToFile = fileDirectory.replace(projectDirectory, "");
-
-  if (!relativePathToFile.startsWith(path.sep) || relativePathToFile === fileDirectory) {
+  if (!isChild) {
     return projectName;
   }
 
-  const pathSegments = relativePathToFile
+  const pathSegments = relativePath
     .split(path.sep)
     .filter((segement) => !!segement)
     .map(replaceInvalidNamespaceCharacters);

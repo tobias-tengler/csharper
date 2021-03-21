@@ -43,15 +43,14 @@ export async function getNamespaceFromFile(file: vscode.Uri) {
   return getNamespaceFromString(content);
 }
 
-// todo: handle commented out
-function getNamespaceFromString(content: string) {
-  const match = /(?:namespace\s([^\s]+))/gm.exec(content);
+export function getNamespaceFromString(content: string) {
+  const match = /^(?:(?!\/\/)\s*namespace\s([^\s]+))/gm.exec(content);
 
   if (!match || match.length !== 2) {
     return null;
   }
 
-  return match[1];
+  return match[1] || null;
 }
 
 export async function getRootNamespaceFromProject(projectFile: vscode.Uri) {
@@ -68,11 +67,11 @@ function getRootNamespaceFromString(content: string) {
     return null;
   }
 
-  return match[1];
+  return match[1] || null;
 }
 
 export function getProjectName(projectFile: vscode.Uri) {
-  return path.basename(projectFile.fsPath).replace(".csproj", "").replace(/\W/g, "");
+  return path.basename(projectFile.fsPath).replace(".csproj", "").replace(/\W/g, "") || null;
 }
 
 export function appendPathSegementsToProjectName(
@@ -87,6 +86,10 @@ export function appendPathSegementsToProjectName(
     .split(path.sep)
     .filter((segement) => !!segement)
     .map((segement) => segement.replace(/\W/g, ""));
+
+  if (pathSegments.length < 1) {
+    return projectName;
+  }
 
   const namespaceParts = [projectName, ...pathSegments];
 

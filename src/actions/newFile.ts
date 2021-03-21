@@ -101,7 +101,7 @@ export async function newFile(outputChannel: OutputChannel, directoryPathFromCon
       }
     }
 
-    if (namespace === null) {
+    if (!namespace) {
       throw new Error("Namespace of C# Project could not be determined");
     }
 

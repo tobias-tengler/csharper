@@ -1,6 +1,57 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { getNearestProjectFile } from "./projects";
+import { getNamespaceFromString, getNearestProjectFile } from "./projects";
+
+suite("getNamespaceFromString", () => {
+  test("Namespace", () => {
+    const content = `using System;
+    namespace Test
+    {
+      public class Example
+      {
+      }
+    }`;
+    const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, "Test");
+  });
+
+  test("Namespace with dots", () => {
+    const content = `using System;
+    namespace Test1.Test2.Test3
+    {
+      public class Example
+      {
+      }
+    }`;
+    const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, "Test1.Test2.Test3");
+  });
+
+  test("No namespace", () => {
+    const content = `using System;
+    public class Example
+    {
+    }`;
+    const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, null);
+  });
+
+  test("Commented out namespace", () => {
+    const content = `using System;
+    // namespace Test
+    // {
+      public class Example
+      {
+      }
+    // }`;
+    const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, null);
+  });
+});
 
 suite("getNearestProjectFile", () => {
   test("No project files", () => {

@@ -43,8 +43,17 @@ export async function getNamespaceFromFile(file: vscode.Uri) {
   return getNamespaceFromString(content);
 }
 
+export async function getRootNamespaceFromProject(projectFile: vscode.Uri) {
+  const content = await getTextFromFile(projectFile);
+
+  return getRootNamespaceFromString(content);
+}
+
+// todo: i don't like using regex for this sort of stuff
 export function getNamespaceFromString(content: string) {
-  const match = /^(?:(?!\/\/)\s*namespace\s([^\s]+))/gm.exec(content);
+  const removedComments = content.replace(/(\/\*(.|[\r\n])*?\*\/|\/\/.*$)/gm, "");
+
+  const match = /(?:namespace\s([^\s]+))/gm.exec(removedComments);
 
   if (!match || match.length !== 2) {
     return null;
@@ -53,14 +62,10 @@ export function getNamespaceFromString(content: string) {
   return match[1] || null;
 }
 
-export async function getRootNamespaceFromProject(projectFile: vscode.Uri) {
-  const content = await getTextFromFile(projectFile);
-
-  return getRootNamespaceFromString(content);
-}
-
 export function getRootNamespaceFromString(content: string) {
-  const match = /(?:^(?!<!--)\s*<RootNamespace>([^<]+)<\/RootNamespace>)/gm.exec(content);
+  const removedComments = content.replace(/<!--(.|[\r\n])*?-->/gm, "");
+
+  const match = /(?:<RootNamespace>([^<]+)<\/RootNamespace>)/gm.exec(removedComments);
 
   if (!match || match.length !== 2) {
     return null;

@@ -65,8 +65,7 @@ suite("getNamespaceFromString", () => {
   });
 
   test("Namespace commented out in block", () => {
-    const content = `using System;
-    /*using System;
+    const content = `/*using System;
     namespace Test
     {*/
     public class Example
@@ -75,6 +74,36 @@ suite("getNamespaceFromString", () => {
     const namespace = getNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
+  });
+
+  test("Namespace with unrelated comment block above", () => {
+    const content = `
+    /*
+    using System;
+    */
+    namespace Test
+    {
+      public class Example
+      {
+      }
+    }`;
+    const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, "Test");
+  });
+
+  test("Namespace with unrelated comment block below", () => {
+    const content = `
+    
+    namespace Test
+    {
+      /*public class Example
+      {
+      }*/
+    }`;
+    const namespace = getNamespaceFromString(content);
+
+    assert.strictEqual(namespace, "Test");
   });
 });
 
@@ -141,6 +170,32 @@ suite("getRootNamespaceFromString", () => {
     const namespace = getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
+  });
+
+  test("RootNamespace with unrelated comment block above", () => {
+    const content = `<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+      <!-- <TargetFramework>net5.0</TargetFramework>
+      <OutputType>Exe</OutputType> -->
+      <RootNamespace>Test</RootNamespace>
+    </PropertyGroup>
+  </Project>`;
+    const namespace = getRootNamespaceFromString(content);
+
+    assert.strictEqual(namespace, "Test");
+  });
+
+  test("RootNamespace with unrelated comment block below", () => {
+    const content = `<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+      <RootNamespace>Test</RootNamespace>
+      <!-- <TargetFramework>net5.0</TargetFramework>
+      <OutputType>Exe</OutputType> -->
+    </PropertyGroup>
+  </Project>`;
+    const namespace = getRootNamespaceFromString(content);
+
+    assert.strictEqual(namespace, "Test");
   });
 });
 

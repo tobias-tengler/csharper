@@ -222,7 +222,7 @@ suite("getNearestProjectFile", () => {
 
     const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
 
-    assert.strictEqual(nearestProjectFile?.fsPath, projectFile.fsPath);
+    assert.strictEqual(nearestProjectFile, projectFile);
   });
 
   test("Origin on same folder", () => {
@@ -232,7 +232,7 @@ suite("getNearestProjectFile", () => {
 
     const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
 
-    assert.strictEqual(nearestProjectFile?.fsPath, projectFile.fsPath);
+    assert.strictEqual(nearestProjectFile, projectFile);
   });
 
   test("Origin below project file", () => {
@@ -242,7 +242,7 @@ suite("getNearestProjectFile", () => {
 
     const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
 
-    assert.strictEqual(nearestProjectFile?.fsPath, projectFile.fsPath);
+    assert.strictEqual(nearestProjectFile, projectFile);
   });
 
   test("Origin two below project file", () => {
@@ -252,7 +252,7 @@ suite("getNearestProjectFile", () => {
 
     const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
 
-    assert.strictEqual(nearestProjectFile?.fsPath, projectFile.fsPath);
+    assert.strictEqual(nearestProjectFile, projectFile);
   });
 
   test("Origin above project file", () => {

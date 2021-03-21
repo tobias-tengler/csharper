@@ -11,14 +11,14 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getDirectoryFromFile, getDirectoryName, isFileChildOfDirectory } from "../helpers";
 
-export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
-  const projectDirUri = getDirectoryFromFile(projectUri);
+export async function selectDirectory(projectFile: Uri, focusedDocument?: Uri | null) {
+  const projectDirUri = getDirectoryFromFile(projectFile);
 
   const directories = await getDirectories(projectDirUri, EXCLUDED_DIRECTORIES);
 
-  const directoryItems = await getDirectoryItems(projectDirUri, directories, editorFileUri);
+  const directoryItems = await getDirectoryItems(projectDirUri, directories, focusedDocument);
 
-  if (directoryItems.length <= 1 && !editorFileUri) {
+  if (directoryItems.length <= 1 && !focusedDocument) {
     return projectDirUri;
   }
 

@@ -1,18 +1,24 @@
-import { newFile } from "./actions/newFile";
+import { newFileFromCommand } from "./actions/newFile";
 import * as vscode from "vscode";
 
-export function activate(context: vscode.ExtensionContext) {
-  const channel = vscode.window.createOutputChannel("CSharper");
+export const extensionChannel = vscode.window.createOutputChannel("CSharper");
 
+export function getConfiguration<T>(key: string, defaultValue: T) {
+  const configuration = vscode.workspace.getConfiguration("csharper");
+
+  return configuration.get<T>(key, defaultValue);
+}
+
+export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("csharper.newFile", async (args) => {
       try {
-        await newFile(channel, args?.fsPath);
+        await newFileFromCommand(args?.fsPath);
       } catch (error) {
-        channel.appendLine(error);
+        extensionChannel.appendLine(error);
       }
     })
   );
 
-  channel.appendLine("Activated");
+  extensionChannel.appendLine("Activated");
 }

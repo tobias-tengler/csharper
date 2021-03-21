@@ -1,34 +1,10 @@
-import { Uri, WorkspaceFolder } from "vscode";
 import * as vscode from "vscode";
 
-type WorkspaceResult = [workspace: WorkspaceFolder, origin: Uri | null];
-
-export async function getWorkspace(directoryPath?: string): Promise<WorkspaceResult> {
-  if (directoryPath) {
-    const directoryPathUri = Uri.file(directoryPath);
-    const workspaceFromDirectory = vscode.workspace.getWorkspaceFolder(directoryPathUri);
-
-    if (!workspaceFromDirectory) {
-      throw new Error("Workspace could not be determined from directory");
-    }
-
-    return [workspaceFromDirectory, directoryPathUri];
-  } else {
-    return await selectWorkspace();
-  }
+export async function getWorkspaceFromUri(uri: vscode.Uri) {
+  return vscode.workspace.getWorkspaceFolder(uri);
 }
 
-async function selectWorkspace(): Promise<WorkspaceResult> {
-  const focusedDocument = getFocusedDocument();
-
-  if (focusedDocument) {
-    const workspaceFromDocument = vscode.workspace.getWorkspaceFolder(focusedDocument.uri);
-
-    if (workspaceFromDocument) {
-      return [workspaceFromDocument, focusedDocument.uri];
-    }
-  }
-
+export async function selectWorkspace() {
   const workspaces = vscode.workspace.workspaceFolders;
 
   if (!workspaces) {
@@ -36,24 +12,14 @@ async function selectWorkspace(): Promise<WorkspaceResult> {
   }
 
   if (workspaces.length === 1) {
-    return [workspaces[0], null];
+    return workspaces[0];
   }
 
   const selectedWorkspace = await vscode.window.showWorkspaceFolderPick({ ignoreFocusOut: true });
 
   if (!selectedWorkspace) {
-    throw new Error("No workspace could be selected");
+    throw new Error("Failed to select workspace");
   }
 
-  return [selectedWorkspace, null];
-}
-
-function getFocusedDocument() {
-  const focusedDocument = vscode.window.activeTextEditor?.document;
-
-  if (focusedDocument && !focusedDocument.isUntitled) {
-    return focusedDocument;
-  }
-
-  return null;
+  return selectedWorkspace;
 }

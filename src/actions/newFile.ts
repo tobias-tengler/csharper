@@ -1,9 +1,12 @@
-import { getTemplates } from "../templates";
-import { getWorkspace } from "./selectWorkspace";
-import { selectFile } from "./selectFile";
-import { selectDirectory } from "./selectDirectory";
-import { selectTemplate } from "./selectTemplate";
-import { selectProject } from "./selectProject";
+import { OutputChannel, Uri } from "vscode";
+import {
+  getDirectoryFromFile,
+  getNeighborWithFileExtension,
+  getTextFromFile,
+  getUriOfFocusedDocument,
+} from "../helpers";
+import * as vscode from "vscode";
+import { getWorkspaceFromUri, selectWorkspace } from "./selectWorkspace";
 import {
   appendPathSegementsToProjectName,
   getNamespaceFromFile,
@@ -12,118 +15,179 @@ import {
   getProjectName,
   getRootNamespaceFromProject,
 } from "../projects";
-import { OutputChannel, Uri } from "vscode";
+import { selectProject } from "./selectProject";
+import { selectDirectory } from "./selectDirectory";
+import { getTemplates } from "../templates";
+import { selectTemplate } from "./selectTemplate";
+import { selectFile } from "./selectFile";
+import { PathItem } from "../types/PathItem";
+import { TextEncoder } from "node:util";
 import { EOL } from "os";
-import { TextEncoder } from "util";
-import * as vscode from "vscode";
-import { getNeighborWithFileExtension, getTextFromFile } from "../helpers";
+import { extensionChannel, getConfiguration } from "../extension";
 
-// todo: this needs heavy testing
-export async function newFile(outputChannel: OutputChannel, directoryPathFromContextMenu?: string) {
-  const configuration = vscode.workspace.getConfiguration("csharper");
+export function newFileFromCommand(directoryPathFromContextMenu?: string) {
+  if (directoryPathFromContextMenu) {
+    return newFileFromContextMenu(directoryPathFromContextMenu);
+  }
 
-  let [workspace, origin] = await getWorkspace(directoryPathFromContextMenu);
+  const respectFocusedDocument = getConfiguration<boolean>("respectFocusedDocument", true);
+
+  const focusedDocumentUri = getUriOfFocusedDocument();
+
+  if (respectFocusedDocument && focusedDocumentUri) {
+    return newFileFromFocusedDocument(focusedDocumentUri);
+  }
+
+  return newFileFromScratch(focusedDocumentUri);
+}
+
+export async function newFileFromContextMenu(directoryPath: string) {
+  const directory = Uri.file(directoryPath);
+
+  const workspace = await getWorkspaceFromUri(directory);
+
+  if (!workspace) {
+    throw new Error("Workspace could not be determined.");
+  }
 
   const projectFiles = await getProjectFileUris(workspace);
 
-  let projectFile: Uri | null = null;
-  if (origin) {
-    const respectFocusedDocument = configuration.get<boolean>("respectFocusedDocument", true);
-
-    if (directoryPathFromContextMenu || respectFocusedDocument) {
-      projectFile = getNearestProjectFile(projectFiles, origin);
-    } else if (!respectFocusedDocument) {
-      origin = null;
-    }
-  }
-
-  if (!projectFile && !directoryPathFromContextMenu) {
-    projectFile = await selectProject(projectFiles);
-  }
+  const projectFile = getNearestProjectFile(projectFiles, directory);
 
   if (!projectFile) {
     vscode.window.showWarningMessage("C# project file could not be determined");
 
-    throw new Error("Project file could not be determined");
+    throw new Error("Project file could not be determined.");
   }
 
-  let destinationDirectory = origin;
-  if (!directoryPathFromContextMenu) {
-    destinationDirectory = await selectDirectory(origin, projectFile);
+  return await newFileFromDirectory(projectFile, directory);
+}
+
+export async function newFileFromFocusedDocument(focusedDocument: Uri) {
+  const workspace = await getWorkspaceFromUri(focusedDocument);
+
+  if (!workspace) {
+    return await newFileFromScratch();
   }
 
-  if (!destinationDirectory) {
-    throw new Error("Destination directory could not be determined");
+  const projectFiles = await getProjectFileUris(workspace);
+
+  // todo: more tests for distance when name of files tarts the same etc
+  const projectFile = getNearestProjectFile(projectFiles, focusedDocument);
+
+  if (!projectFile) {
+    return await newFileFromWorkspace(workspace);
   }
 
+  const focusedDocumentDirectory = getDirectoryFromFile(focusedDocument);
+
+  return await newFileFromDirectory(projectFile, focusedDocumentDirectory);
+}
+
+export async function newFileFromWorkspace(workspace: vscode.WorkspaceFolder, focusedDocument?: Uri | null) {
+  const projectFiles = await getProjectFileUris(workspace);
+
+  const projectFile = await selectProject(projectFiles);
+
+  return await newFileFromProject(projectFile, focusedDocument);
+}
+
+export async function newFileFromScratch(focusedDocument?: Uri | null) {
+  const workspace = await selectWorkspace();
+
+  return await newFileFromWorkspace(workspace, focusedDocument);
+}
+
+export async function newFileFromProject(projectFile: Uri, focusedDocument?: Uri | null) {
+  const directory = await selectDirectory(projectFile, focusedDocument);
+
+  return await newFileFromDirectory(projectFile, directory);
+}
+
+export async function newFileFromDirectory(projectFile: Uri, directory: Uri) {
   const templates = await getTemplates();
 
   const template = await selectTemplate(templates);
 
-  const [filename, fileUri] = await selectFile(destinationDirectory, template.label === "Interface");
+  return await newFileFromTemplate(projectFile, directory, template);
+}
 
-  outputChannel.appendLine(`Creating new '${template.label}' in '${fileUri}' ...`);
+export async function newFileFromTemplate(projectFile: Uri, directory: Uri, template: PathItem) {
+  const [filename, filePath] = await selectFile(directory, template.label === "Interface");
 
-  const templateContent = (await getTextFromFile(template.uri)).replace(/\${name}/g, filename);
+  extensionChannel.appendLine(`Creating new '${template.label}' in '${filePath}' ...`);
 
-  const includeNamespace = configuration.get<boolean>("includeNamespace", true);
+  const namespace = await getNamespace(projectFile, filePath);
 
-  // todo: i hate this nesting
-  if (includeNamespace) {
-    let namespace: string | null = null;
+  return await newFile(filePath, filename, template.uri, namespace);
+}
 
-    const useNamespaceOfNeighboringFiles = configuration.get<boolean>("useNamespaceOfNeighboringFiles", true);
+export async function newFile(filePath: Uri, filename: string, templatePath: Uri, namespace: string) {
+  // todo: try doing this differently
+  const utfArray = new TextEncoder().encode(namespace);
 
-    if (useNamespaceOfNeighboringFiles) {
-      const neighborFile = await getNeighborWithFileExtension(fileUri, ".cs");
+  await vscode.workspace.fs.writeFile(filePath, utfArray);
 
-      if (neighborFile) {
-        const neighborNamespace = await getNamespaceFromFile(neighborFile);
-
-        if (neighborNamespace) {
-          namespace = neighborNamespace;
-        }
-      }
-    }
-
-    if (!namespace) {
-      namespace = await getRootNamespaceFromProject(projectFile);
-
-      if (!namespace) {
-        namespace = getProjectName(projectFile);
-      }
-
-      if (namespace) {
-        const includeSubdirectories = configuration.get<boolean>("includeSubdirectoriesInNamespace", true);
-
-        if (includeSubdirectories) {
-          namespace = appendPathSegementsToProjectName(namespace, projectFile, fileUri);
-        }
-      }
-    }
-
-    if (!namespace) {
-      throw new Error("Namespace of C# Project could not be determined");
-    }
-
-    const namespaceStrig = `namespace ${namespace}${EOL}{${EOL}    ${EOL}}`;
-
-    const utfArray = new TextEncoder().encode(namespaceStrig);
-
-    await vscode.workspace.fs.writeFile(fileUri, utfArray);
-  } else {
-    await vscode.workspace.fs.writeFile(fileUri, new Uint8Array());
-  }
-
-  const newDocument = await vscode.workspace.openTextDocument(fileUri);
+  const templateContent = (await getTextFromFile(templatePath)).replace(/\${name}/g, filename);
+  const newDocument = await vscode.workspace.openTextDocument(filePath);
   const editor = await vscode.window.showTextDocument(newDocument);
   const snippetString = new vscode.SnippetString(templateContent);
 
-  if (includeNamespace) {
+  if (namespace) {
     editor.insertSnippet(snippetString, new vscode.Position(2, 4));
   } else {
     editor.insertSnippet(snippetString);
   }
 
-  outputChannel.appendLine("Successfully created new file!");
+  extensionChannel.appendLine("Successfully created new file!");
+}
+
+// todo: this is badly testable
+export async function getNamespace(projectFile: Uri, filepath: Uri) {
+  const includeNamespace = getConfiguration<boolean>("includeNamespace", true);
+
+  if (!includeNamespace) {
+    return "";
+  }
+
+  let namespace: string | null = null;
+
+  const useNamespaceOfNeighboringFiles = getConfiguration<boolean>("useNamespaceOfNeighboringFiles", true);
+
+  // todo: i dont like the nesting here
+  if (useNamespaceOfNeighboringFiles) {
+    const neighborFile = await getNeighborWithFileExtension(filepath, ".cs");
+
+    if (neighborFile) {
+      const neighborNamespace = await getNamespaceFromFile(neighborFile);
+
+      if (neighborNamespace) {
+        namespace = neighborNamespace;
+      }
+    }
+  }
+
+  if (!namespace) {
+    namespace = await getRootNamespaceFromProject(projectFile);
+
+    if (!namespace) {
+      namespace = getProjectName(projectFile);
+    }
+
+    if (namespace) {
+      const includeSubdirectories = getConfiguration<boolean>("includeSubdirectoriesInNamespace", true);
+
+      if (includeSubdirectories) {
+        namespace = appendPathSegementsToProjectName(namespace, projectFile, filepath);
+      }
+    }
+  }
+
+  if (!namespace) {
+    extensionChannel.appendLine("[WARN] Namespace of C# Project could not be determined");
+
+    return "";
+  }
+
+  return `namespace ${namespace}${EOL}{${EOL}    ${EOL}}`;
 }

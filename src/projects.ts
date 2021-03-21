@@ -92,7 +92,7 @@ export function appendPathSegementsToProjectName(
     return projectName;
   }
 
-  const pathSegments = getPathSegements(relativePath).map(replaceInvalidNamespaceCharacters);
+  const pathSegments = relativePath.split(path.sep).filter((segement) => !!segement).map(replaceInvalidNamespaceCharacters);
 
   if (pathSegments.length < 1) {
     return projectName;
@@ -105,8 +105,4 @@ export function appendPathSegementsToProjectName(
 
 function replaceInvalidNamespaceCharacters(input: string) {
   return input.replace(/[^a-zA-Z0-9\.]/g, "");
-}
-
-export function getPathSegements(fullpath: string) {
-  return fullpath.split("/").filter((segement) => !!segement)
 }

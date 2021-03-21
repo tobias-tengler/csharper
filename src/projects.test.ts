@@ -1,9 +1,9 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { getNamespaceFromString, getNearestProjectFile, getProjectName, getRootNamespaceFromString } from "./projects";
+import { appendPathSegementsToProjectName, getNamespaceFromString, getNearestProjectFile, getProjectName, getRootNamespaceFromString } from "./projects";
 
 suite("getNamespaceFromString", () => {
-  test("Namespace", () => {
+  test("Base case", () => {
     const content = `using System;
     namespace Test
     {
@@ -108,7 +108,7 @@ suite("getNamespaceFromString", () => {
 });
 
 suite("getRootNamespaceFromString", () => {
-  test("RootNamespace", () => {
+  test("Base case", () => {
     const content = `<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
       <OutputType>Exe</OutputType>
@@ -281,7 +281,7 @@ suite("getNearestProjectFile", () => {
 });
 
 suite("getProjectName",() => {
-  test("Project name", () => {
+  test("Base case", () => {
     const projectFile = vscode.Uri.file("/home/user/src/Project.csproj")
     const projectName = getProjectName(projectFile)
 
@@ -300,5 +300,57 @@ suite("getProjectName",() => {
     const projectName = getProjectName(projectFile)
 
     assert.strictEqual(projectName, "Project");
+  })
+})
+
+suite("appendPathSegementsToProjectName", () => {
+  test("Base case", () => {
+    const projectName = "Project";
+    const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
+    const filepath = vscode.Uri.file("/home/user/src/Models/Database/File.cs")
+
+    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+
+    assert.strictEqual(namespace, "Project.Models.Database");
+  })
+
+  test("Same directory", () => {
+    const projectName = "Project";
+    const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
+    const filepath = vscode.Uri.file("/home/user/src/File.cs")
+
+    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+
+    assert.strictEqual(namespace, "Project");
+  })
+
+  test("Directories contain dot", () => {
+    const projectName = "Project";
+    const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
+    const filepath = vscode.Uri.file("/home/user/src/Database.Models/Table/File.cs")
+
+    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+
+    assert.strictEqual(namespace, "Project.Database.Models.Table");
+  })
+
+  test("File outside of project directory", () => {
+    const projectName = "Project";
+    const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
+    const filepath = vscode.Uri.file("/home/something/Models/Database/File.cs")
+
+    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+
+    assert.strictEqual(namespace, "Project");
+  })
+
+  test("File outside of project directory (start of directory matches)", () => {
+    const projectName = "Project";
+    const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
+    const filepath = vscode.Uri.file("/home/user/src2/Models/Database/File.cs")
+
+    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+
+    assert.strictEqual(namespace, "Project");
   })
 })

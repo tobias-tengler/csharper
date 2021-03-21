@@ -110,8 +110,6 @@ function addRelativePathDescription(item: PathItem) {
   const relativePath = vscode.workspace.asRelativePath(item.uri, false);
   const pathSegments = relativePath.split(path.sep);
 
-  console.log("relativePath", relativePath);
-
   if (pathSegments.length === 1) {
     item.description = relativePath;
   } else {

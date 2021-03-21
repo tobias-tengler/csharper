@@ -76,7 +76,8 @@
     "watch": "tsc -watch -p ./",
     "test": "node ./out/test/runTest.js",
     "pretest": "npm run lint && npm run compile",
-    "deploy": "vsce publish"
+    "deploy": "vsce publish",
+    "prepublish": "npm run compile"
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",

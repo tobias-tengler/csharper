@@ -17,6 +17,7 @@ export async function getTextFromFile(file: vscode.Uri) {
   return document.getText();
 }
 
+// todo: maybe test!?
 export async function getNeighborWithFileExtension(file: vscode.Uri, extension: string) {
   const directory = getDirectoryFromFile(file);
 
@@ -35,6 +36,7 @@ export async function getNeighborWithFileExtension(file: vscode.Uri, extension: 
   return vscode.Uri.joinPath(directory, filename);
 }
 
+// todo: test this
 export function isFileChildOfDirectory(
   directory: vscode.Uri,
   file: vscode.Uri

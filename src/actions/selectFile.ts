@@ -6,6 +6,7 @@ import { getRelativePath } from "../helpers";
 
 type FileResult = [filename: string, filepath: Uri];
 
+// todo: test this
 export async function selectFile(directory: Uri, isInterface: boolean) {
   const disposables: Disposable[] = [];
 

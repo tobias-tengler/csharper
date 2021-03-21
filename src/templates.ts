@@ -18,6 +18,7 @@ function getTemplateDirectory() {
   return templateDir;
 }
 
+// todo: maybe test!?
 export async function getTemplates() {
   const templateDir = getTemplateDirectory();
 

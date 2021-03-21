@@ -21,6 +21,7 @@ export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
   return uris;
 }
 
+// todo: more tests for distance when name of files tarts the same etc
 export function getNearestProjectFile(projectFiles: vscode.Uri[], origin: vscode.Uri) {
   let nearestProjectFile: vscode.Uri | null = null;
   let nearestProjectFileSubstringLength = origin.fsPath.length;

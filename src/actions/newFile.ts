@@ -30,6 +30,8 @@ import {
   useNamespaceOfNeighboringFiles,
 } from "../configuration";
 
+// todo: test this entire file
+
 export function newFileFromCommand(directoryPathFromContextMenu?: string) {
   if (directoryPathFromContextMenu) {
     return newFileFromContextMenu(directoryPathFromContextMenu);
@@ -75,7 +77,6 @@ export async function newFileFromFocusedDocument(focusedDocument: vscode.Uri) {
 
   const projectFiles = await getProjectFileUris(workspace);
 
-  // todo: more tests for distance when name of files tarts the same etc
   const projectFile = getNearestProjectFile(projectFiles, focusedDocument);
 
   if (!projectFile) {
@@ -90,7 +91,7 @@ export async function newFileFromFocusedDocument(focusedDocument: vscode.Uri) {
 export async function newFileFromWorkspace(
   workspace: vscode.WorkspaceFolder,
   focusedDocument?: vscode.Uri | null,
-  projectFiles: vscode.Uri[] = []
+  projectFiles?: vscode.Uri[]
 ) {
   projectFiles = projectFiles ?? (await getProjectFileUris(workspace));
 

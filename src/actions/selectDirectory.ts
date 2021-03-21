@@ -30,7 +30,7 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
       quickpick.ignoreFocusOut = true;
       quickpick.canSelectMany = false;
       quickpick.title = TITLE;
-      quickpick.placeholder = "Select destination directory";
+      quickpick.placeholder = "Select a destination directory";
       quickpick.step = 2;
       quickpick.totalSteps = TOTAL_STEPS;
       quickpick.items = directoryItems;

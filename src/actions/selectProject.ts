@@ -5,20 +5,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 export async function selectProject(projectFiles: Uri[]) {
-  const projectItems = projectFiles
-    .map((projectFile) => {
-      const filename = path.basename(projectFile.fsPath);
-      const projectName = filename.replace(".csproj", "");
-
-      const item: PathItem = {
-        label: projectName,
-        description: vscode.workspace.asRelativePath(projectFile, false),
-        uri: projectFile,
-      };
-
-      return item;
-    })
-    .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+  const projectItems = getProjectPathItems(projectFiles)
 
   const disposables: Disposable[] = [];
 
@@ -28,7 +15,7 @@ export async function selectProject(projectFiles: Uri[]) {
       quickpick.ignoreFocusOut = true;
       quickpick.canSelectMany = false;
       quickpick.title = TITLE;
-      quickpick.placeholder = "Select project";
+      quickpick.placeholder = "Select a project";
       quickpick.step = 1;
       quickpick.totalSteps = TOTAL_STEPS;
       quickpick.items = projectItems;
@@ -56,4 +43,21 @@ export async function selectProject(projectFiles: Uri[]) {
   } finally {
     disposables.map((disposable) => disposable.dispose());
   }
+}
+
+export function getProjectPathItems(projectFiles: Uri[]) {
+  return projectFiles
+  .map((projectFile) => {
+    const filename = path.basename(projectFile.fsPath);
+    const projectName = filename.replace(".csproj", "");
+
+    const item: PathItem = {
+      label: projectName,
+      description: vscode.workspace.asRelativePath(projectFile, false),
+      uri: projectFile,
+    };
+
+    return item;
+  })
+  .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
 }

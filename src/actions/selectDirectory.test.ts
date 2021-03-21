@@ -5,18 +5,20 @@ import { DIRECTORY_OF_FOCUSED_FILE_LABEL, PROJECT_ROOT_LABEL } from "../constant
 import { PathItem } from "../types/PathItem";
 import { getDirectoryItems } from "./selectDirectory";
 
+const testWorkspace = vscode.Uri.file(path.resolve(__dirname, "../../test-fixture"));
+
 suite("getDirectoryItems", () => {
   const directories: vscode.Uri[] = [
-    vscode.Uri.file("/home/user/src/Project/Subdir1"),
-    vscode.Uri.file("/home/user/src/Project/Subdir1/SubSubDir1"),
-    vscode.Uri.file("/home/user/src/Project/Subdir2"),
-    vscode.Uri.file("/home/user/src/Project/Subdir2/SubSubDir2"),
+    vscode.Uri.joinPath(testWorkspace, "Subdir1"),
+    vscode.Uri.joinPath(testWorkspace, "Subdir1/SubSubDir1"),
+    vscode.Uri.joinPath(testWorkspace, "Subdir2"),
+    vscode.Uri.joinPath(testWorkspace, "Subdir2/SubSubDir2"),
   ];
   const directoryPathItems = directories.map<PathItem>((directory) => ({
     label: path.basename(directory.fsPath),
     uri: directory,
   }));
-  const projectDir = vscode.Uri.file("/home/user/src/Project");
+  const projectDir = testWorkspace;
 
   const projectDirPathItem: PathItem = {
     label: path.basename(projectDir.fsPath),
@@ -74,12 +76,8 @@ suite("getDirectoryItems", () => {
   });
 
   test("Same directory names", async () => {
-    const localDirectories: vscode.Uri[] = [
-      ...directories,
-      vscode.Uri.file("/home/user/src/Project/Subdir1/SubSubDir2"),
-    ];
+    const localDirectories: vscode.Uri[] = [...directories, vscode.Uri.joinPath(projectDir, "Subdir1/SubSubDir2")];
 
-    // todo: how to mock vscode.workspace.asRelativePath
     const items = await getDirectoryItems(projectDir, localDirectories);
 
     const expectedItems: PathItem[] = [
@@ -87,11 +85,11 @@ suite("getDirectoryItems", () => {
       directoryPathItems[0],
       directoryPathItems[1],
       directoryPathItems[2],
-      { ...directoryPathItems[3], description: "home/user/src/Project/Subdir2" },
+      { ...directoryPathItems[3], description: "Subdir2" },
       {
         label: path.basename(localDirectories[4].fsPath),
         uri: localDirectories[4],
-        description: "home/user/src/Project/Subdir1",
+        description: "Subdir1",
       },
     ];
 
@@ -99,27 +97,23 @@ suite("getDirectoryItems", () => {
   });
 
   test("Focused file has same directory name", async () => {
-    const focusedFile = vscode.Uri.file("/home/user/src/Project/Subdir1/SubSubDir2/File.cs");
-    const localDirectories: vscode.Uri[] = [
-      ...directories,
-      vscode.Uri.file("/home/user/src/Project/Subdir1/SubSubDir2"),
-    ];
+    const focusedFile = vscode.Uri.joinPath(projectDir, "Subdir1/SubSubDir2/File.cs");
+    const localDirectories: vscode.Uri[] = [...directories, vscode.Uri.joinPath(projectDir, "Subdir1/SubSubDir2")];
 
-    // todo: how to mock vscode.workspace.asRelativePath
     const items = await getDirectoryItems(projectDir, localDirectories, focusedFile);
 
     const expectedItems: PathItem[] = [
       {
         label: path.basename(localDirectories[4].fsPath),
         uri: localDirectories[4],
-        description: "home/user/src/Project/Subdir1",
+        description: "Subdir1",
         detail: DIRECTORY_OF_FOCUSED_FILE_LABEL,
       },
       projectDirPathItem,
       directoryPathItems[0],
       directoryPathItems[1],
       directoryPathItems[2],
-      { ...directoryPathItems[3], description: "home/user/src/Project/Subdir2" },
+      { ...directoryPathItems[3], description: "Subdir2" },
     ];
 
     assert.deepStrictEqual(items, expectedItems);

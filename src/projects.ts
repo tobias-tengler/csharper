@@ -1,7 +1,7 @@
 import { RelativePattern, WorkspaceFolder } from "vscode";
 import * as vscode from "vscode";
 import * as path from "path";
-import { getTextFromFile, isFileChildOfDirectory } from "./helpers";
+import { getDirectoryFromFile, getDirectoryName, getRelativePath, getTextFromFile, isFileChildOfDirectory } from "./helpers";
 
 export async function getProjectFileUris(workspaceFolder: WorkspaceFolder) {
   const relativePattern = new RelativePattern(workspaceFolder, "**/*.csproj");
@@ -20,9 +20,9 @@ export function getNearestProjectFile(projectFiles: vscode.Uri[], origin: vscode
   let nearestProjectFileSubstringLength = origin.fsPath.length;
 
   for (const projectFile of projectFiles) {
-    const projectFileDir = path.dirname(projectFile.fsPath);
+    const projectFileDir = getDirectoryFromFile(projectFile);
 
-    const substringLength = origin.fsPath.replace(projectFileDir, "").length;
+    const substringLength = getRelativePath(projectFileDir, origin).length;
 
     if (substringLength < nearestProjectFileSubstringLength) {
       nearestProjectFile = projectFile;
@@ -75,9 +75,9 @@ export function getRootNamespaceFromString(content: string) {
 }
 
 export function getProjectName(projectFile: vscode.Uri) {
-  const filename = path.basename(projectFile.fsPath).replace(".csproj", "");
+  const filename = getDirectoryName(projectFile).replace(".csproj", "");
 
-  return replaceInvalidNamespaceCharacters(filename) || null;
+  return replaceInvalidNamespaceCharacters(filename) || "";
 }
 
 export function appendPathSegementsToProjectName(
@@ -85,14 +85,17 @@ export function appendPathSegementsToProjectName(
   projectFile: vscode.Uri,
   filepath: vscode.Uri
 ): string {
-  const projectDirectory = path.dirname(projectFile.fsPath);
-  const [isChild, relativePath] = isFileChildOfDirectory(projectDirectory, filepath.fsPath);
+  const projectDirectory = getDirectoryFromFile(projectFile);
+  const [isChild, relativePath] = isFileChildOfDirectory(projectDirectory, filepath);
 
   if (!isChild) {
     return projectName;
   }
 
-  const pathSegments = relativePath.split(path.sep).filter((segement) => !!segement).map(replaceInvalidNamespaceCharacters);
+  const pathSegments = relativePath
+    .split(path.sep)
+    .filter((segement) => !!segement)
+    .map(replaceInvalidNamespaceCharacters);
 
   if (pathSegments.length < 1) {
     return projectName;

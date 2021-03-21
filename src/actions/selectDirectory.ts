@@ -9,10 +9,10 @@ import {
 } from "../constants";
 import * as vscode from "vscode";
 import * as path from "path";
-import { isFileChildOfDirectory } from "../helpers";
+import { getDirectoryFromFile, getDirectoryName, isFileChildOfDirectory } from "../helpers";
 
 export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
-  const projectDirUri = Uri.file(path.dirname(projectUri.fsPath));
+  const projectDirUri = getDirectoryFromFile(projectUri);
 
   const directories = await getDirectories(projectDirUri, EXCLUDED_DIRECTORIES);
 
@@ -60,12 +60,12 @@ export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri
   }
 }
 
-export async function getDirectoryItems(projectDirUri: Uri, directories: Uri[], editorFileUri?: Uri | null) {
+export async function getDirectoryItems(projectDir: Uri, directories: Uri[], editorFile?: Uri | null) {
   const directoryItems: PathItem[] = [];
 
-  if (editorFileUri) {
-    if (isFileChildOfDirectory(projectDirUri.fsPath, editorFileUri.fsPath)[0]) {
-      const editorFileDir = Uri.file(path.dirname(editorFileUri.fsPath));
+  if (editorFile) {
+    if (isFileChildOfDirectory(projectDir, editorFile)[0]) {
+      const editorFileDir = getDirectoryFromFile(editorFile);
 
       const item = getPathItemFromUri(editorFileDir);
       item.detail = DIRECTORY_OF_FOCUSED_FILE_LABEL;
@@ -77,7 +77,7 @@ export async function getDirectoryItems(projectDirUri: Uri, directories: Uri[], 
   }
 
   directoryItems.push({
-    ...getPathItemFromUri(projectDirUri),
+    ...getPathItemFromUri(projectDir),
     detail: PROJECT_ROOT_LABEL,
   });
 
@@ -101,19 +101,17 @@ export async function getDirectoryItems(projectDirUri: Uri, directories: Uri[], 
 }
 
 function getPathItemFromUri(uri: Uri): PathItem {
-  const directoryName = path.basename(uri.fsPath);
-
-  return { uri, label: directoryName };
+  return { uri, label: getDirectoryName(uri) };
 }
 
 function addRelativePathDescription(item: PathItem) {
   const relativePath = vscode.workspace.asRelativePath(item.uri, false);
-  const pathSegments = relativePath.split("/")
+  const pathSegments = relativePath.split("/");
 
   if (pathSegments.length === 1) {
     item.description = relativePath;
   } else {
-    item.description = pathSegments.slice(0, pathSegments.length - 1).join("/")
+    item.description = pathSegments.slice(0, pathSegments.length - 1).join("/");
   }
 }
 

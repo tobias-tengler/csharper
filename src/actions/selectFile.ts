@@ -2,6 +2,7 @@ import { Disposable, Uri } from "vscode";
 import { CSHARP_KEYWORDS, TITLE, TOTAL_STEPS } from "../constants";
 import * as vscode from "vscode";
 import * as fs from "fs";
+import { getRelativePath } from "../helpers";
 
 type FileResult = [filename: string, filepath: Uri];
 
@@ -58,7 +59,7 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
 
           if (fs.existsSync(fileUri.fsPath)) {
             input.validationMessage = "File already exists";
-            input.value = fileUri.fsPath.replace(directory.fsPath, "").replace(/^\/+/, "").replace(/\.cs$/, "");
+            input.value = getRelativePath(directory, fileUri).replace(/^\/+/, "").replace(/\.cs$/, "");
             error = true;
 
             return;

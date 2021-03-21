@@ -8,7 +8,7 @@ export async function getTextFromFile(file: vscode.Uri) {
 }
 
 export async function getNeighborWithFileExtension(file: vscode.Uri, extension: string) {
-  const directory = vscode.Uri.file(path.dirname(file.fsPath));
+  const directory = getDirectoryFromFile(file);
 
   const files = await vscode.workspace.fs.readDirectory(directory);
 
@@ -25,16 +25,33 @@ export async function getNeighborWithFileExtension(file: vscode.Uri, extension: 
   return vscode.Uri.joinPath(directory, filename);
 }
 
-export function isFileChildOfDirectory(directory: string, file: string): [isChild: boolean, relativePath: string] {
-  const fileDirectory = path.dirname(file);
+export function isFileChildOfDirectory(
+  directory: vscode.Uri,
+  file: vscode.Uri
+): [isChild: boolean, relativePath: string] {
+  const fileDirectory = getDirectoryFromFile(file);
 
-  const relativePath = fileDirectory.replace(directory, "");
+  const relativePath = getRelativePath(directory, fileDirectory);
 
-  const isChild = relativePath.startsWith(path.sep) && relativePath !== fileDirectory;
+  const isChild = relativePath.startsWith(path.sep) && relativePath !== fileDirectory.fsPath;
 
   if (isChild) {
     return [true, relativePath];
   }
 
   return [false, ""];
+}
+
+export function getDirectoryFromFile(file: vscode.Uri) {
+  const directory = path.dirname(file.fsPath);
+
+  return vscode.Uri.file(directory);
+}
+
+export function getDirectoryName(fullpath: vscode.Uri) {
+  return path.basename(fullpath.fsPath);
+}
+
+export function getRelativePath(parent: vscode.Uri, file: vscode.Uri) {
+  return file.fsPath.replace(parent.fsPath, "");
 }

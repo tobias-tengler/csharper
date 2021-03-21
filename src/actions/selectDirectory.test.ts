@@ -4,6 +4,7 @@ import * as path from "path";
 import { DIRECTORY_OF_FOCUSED_FILE_LABEL, PROJECT_ROOT_LABEL } from "../constants";
 import { PathItem } from "../types/PathItem";
 import { getDirectoryItems } from "./selectDirectory";
+import { getDirectoryFromFile, getDirectoryName } from "../helpers";
 
 const testWorkspace = vscode.Uri.file(path.resolve(__dirname, "../../test-fixture"));
 
@@ -15,13 +16,13 @@ suite("getDirectoryItems", () => {
     vscode.Uri.joinPath(testWorkspace, "Subdir2/SubSubDir2"),
   ];
   const directoryPathItems = directories.map<PathItem>((directory) => ({
-    label: path.basename(directory.fsPath),
+    label: getDirectoryName(directory),
     uri: directory,
   }));
   const projectDir = testWorkspace;
 
   const projectDirPathItem: PathItem = {
-    label: path.basename(projectDir.fsPath),
+    label: getDirectoryName(projectDir),
     detail: PROJECT_ROOT_LABEL,
     uri: projectDir,
   };
@@ -87,7 +88,7 @@ suite("getDirectoryItems", () => {
       directoryPathItems[2],
       { ...directoryPathItems[3], description: "Subdir2" },
       {
-        label: path.basename(localDirectories[4].fsPath),
+        label: getDirectoryName(localDirectories[4]),
         uri: localDirectories[4],
         description: "Subdir1",
       },
@@ -97,20 +98,22 @@ suite("getDirectoryItems", () => {
   });
 
   test("Same directory names (multiple levels)", async () => {
-    const localDirectories: vscode.Uri[] = [vscode.Uri.joinPath(projectDir, "Subdir1/SubSubDir1/test"),
-    vscode.Uri.joinPath(projectDir, "Subdir2/SubSubDir2/test")];
+    const localDirectories: vscode.Uri[] = [
+      vscode.Uri.joinPath(projectDir, "Subdir1/SubSubDir1/test"),
+      vscode.Uri.joinPath(projectDir, "Subdir2/SubSubDir2/test"),
+    ];
 
     const items = await getDirectoryItems(projectDir, localDirectories);
 
     const expectedItems: PathItem[] = [
       projectDirPathItem,
       {
-        label: path.basename(localDirectories[0].fsPath),
+        label: getDirectoryName(localDirectories[0]),
         uri: localDirectories[0],
         description: "Subdir1/SubSubDir1",
       },
       {
-        label: path.basename(localDirectories[1].fsPath),
+        label: getDirectoryName(localDirectories[1]),
         uri: localDirectories[1],
         description: "Subdir2/SubSubDir2",
       },
@@ -127,7 +130,7 @@ suite("getDirectoryItems", () => {
 
     const expectedItems: PathItem[] = [
       {
-        label: path.basename(localDirectories[4].fsPath),
+        label: getDirectoryName(localDirectories[4]),
         uri: localDirectories[4],
         description: "Subdir1",
         detail: DIRECTORY_OF_FOCUSED_FILE_LABEL,
@@ -143,10 +146,10 @@ suite("getDirectoryItems", () => {
   });
 
   function getFocusedFileItem(focusedFile: vscode.Uri): PathItem {
-    const focusedFileBaseDir = vscode.Uri.file(path.dirname(focusedFile.fsPath));
+    const focusedFileBaseDir = getDirectoryFromFile(focusedFile);
 
     return {
-      label: path.basename(focusedFileBaseDir.fsPath),
+      label: getDirectoryName(focusedFileBaseDir),
       detail: DIRECTORY_OF_FOCUSED_FILE_LABEL,
       uri: focusedFileBaseDir,
     };

@@ -10,6 +10,7 @@ import {
 import * as vscode from "vscode";
 import * as path from "path";
 import { isFileChildOfDirectory } from "../helpers";
+import { getPathSegements } from "../projects";
 
 export async function selectDirectory(editorFileUri: Uri | null, projectUri: Uri) {
   const projectDirUri = Uri.file(path.dirname(projectUri.fsPath));
@@ -108,11 +109,7 @@ function getPathItemFromUri(uri: Uri): PathItem {
 
 function addRelativePathDescription(item: PathItem) {
   const relativePath = vscode.workspace.asRelativePath(item.uri, false);
-  const pathSegments = relativePath.split(path.sep);
-
-  process.stdout.write("relativePath: " + relativePath + "\n");
-  process.stdout.write("pathSegments: " + pathSegments.join(",") + "\n");
-  process.stdout.write("sep: " + path.sep + "\n");
+  const pathSegments = getPathSegements(relativePath)
 
   if (pathSegments.length === 1) {
     item.description = relativePath;

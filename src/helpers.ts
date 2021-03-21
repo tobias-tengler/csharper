@@ -30,7 +30,7 @@ export function isFileChildOfDirectory(directory: string, file: string): [isChil
 
   const relativePath = fileDirectory.replace(directory, "");
 
-  const isChild = relativePath.startsWith(path.sep) && relativePath !== fileDirectory;
+  const isChild = relativePath.startsWith("/") && relativePath !== fileDirectory;
 
   if (isChild) {
     return [true, relativePath];

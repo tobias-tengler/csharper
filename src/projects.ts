@@ -75,7 +75,7 @@ export function getRootNamespaceFromString(content: string) {
 }
 
 export function getProjectName(projectFile: vscode.Uri) {
-  return path.basename(projectFile.fsPath).replace(".csproj", "").replace(/\W/g, "") || null;
+  return path.basename(projectFile.fsPath).replace(".csproj", "").replace(/[^a-zA-Z0-9\.]/g, "") || null;
 }
 
 export function appendPathSegementsToProjectName(

@@ -6,18 +6,22 @@ function getConfiguration<T>(key: string, defaultValue: T) {
   return configuration.get<T>(key, defaultValue);
 }
 
-export function useNamespaceOfNeighboringFiles() {
-  return getConfiguration<boolean>("useNamespaceOfNeighboringFiles", true);
+class Configuration {
+  useNamespaceOfNeighboringFiles() {
+    return getConfiguration<boolean>("useNamespaceOfNeighboringFiles", true);
+  }
+
+  respectFocusedDocument() {
+    return getConfiguration<boolean>("respectFocusedDocument", true);
+  }
+
+  includeNamespace() {
+    return getConfiguration<boolean>("includeNamespace", true);
+  }
+
+  includeSubdirectoriesInNamespace() {
+    return getConfiguration<boolean>("includeSubdirectoriesInNamespace", true);
+  }
 }
 
-export function respectFocusedDocument() {
-  return getConfiguration<boolean>("respectFocusedDocument", true);
-}
-
-export function includeNamespace() {
-  return getConfiguration<boolean>("includeNamespace", true);
-}
-
-export function includeSubdirectoriesInNamespace() {
-  return getConfiguration<boolean>("includeSubdirectoriesInNamespace", true);
-}
+export const configuration = new Configuration();

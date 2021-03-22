@@ -1,12 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import {
-  appendPathSegementsToProjectName,
-  getNamespaceFromString,
-  getNearestProjectFile,
-  getProjectName,
-  getRootNamespaceFromString,
-} from "./projects";
+import { projects } from "./projects";
 
 suite("getNamespaceFromString", () => {
   test("Base case", () => {
@@ -17,7 +11,7 @@ suite("getNamespaceFromString", () => {
       {
       }
     }`;
-    const namespace = getNamespaceFromString(content);
+    const namespace = projects.getNamespaceFromString(content);
 
     assert.strictEqual(namespace, "Test");
   });
@@ -30,7 +24,7 @@ suite("getNamespaceFromString", () => {
       {
       }
     }`;
-    const namespace = getNamespaceFromString(content);
+    const namespace = projects.getNamespaceFromString(content);
 
     assert.strictEqual(namespace, "Test1.Test2.Test3");
   });
@@ -40,7 +34,7 @@ suite("getNamespaceFromString", () => {
     public class Example
     {
     }`;
-    const namespace = getNamespaceFromString(content);
+    const namespace = projects.getNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
   });
@@ -53,7 +47,7 @@ suite("getNamespaceFromString", () => {
     {
     }
     // }`;
-    const namespace = getNamespaceFromString(content);
+    const namespace = projects.getNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
   });
@@ -65,7 +59,7 @@ suite("getNamespaceFromString", () => {
     public class Example
     {
     }`;
-    const namespace = getNamespaceFromString(content);
+    const namespace = projects.getNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
   });
@@ -77,7 +71,7 @@ suite("getNamespaceFromString", () => {
     public class Example
     {
     }`;
-    const namespace = getNamespaceFromString(content);
+    const namespace = projects.getNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
   });
@@ -93,7 +87,7 @@ suite("getNamespaceFromString", () => {
       {
       }
     }`;
-    const namespace = getNamespaceFromString(content);
+    const namespace = projects.getNamespaceFromString(content);
 
     assert.strictEqual(namespace, "Test");
   });
@@ -107,7 +101,7 @@ suite("getNamespaceFromString", () => {
       {
       }*/
     }`;
-    const namespace = getNamespaceFromString(content);
+    const namespace = projects.getNamespaceFromString(content);
 
     assert.strictEqual(namespace, "Test");
   });
@@ -122,7 +116,7 @@ suite("getRootNamespaceFromString", () => {
       <RootNamespace>Test</RootNamespace>
     </PropertyGroup>
   </Project>`;
-    const namespace = getRootNamespaceFromString(content);
+    const namespace = projects.getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, "Test");
   });
@@ -135,7 +129,7 @@ suite("getRootNamespaceFromString", () => {
       <RootNamespace>Test1.Test2.Test3</RootNamespace>
     </PropertyGroup>
   </Project>`;
-    const namespace = getRootNamespaceFromString(content);
+    const namespace = projects.getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, "Test1.Test2.Test3");
   });
@@ -147,7 +141,7 @@ suite("getRootNamespaceFromString", () => {
       <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
   </Project>`;
-    const namespace = getRootNamespaceFromString(content);
+    const namespace = projects.getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
   });
@@ -160,7 +154,7 @@ suite("getRootNamespaceFromString", () => {
       <!-- <RootNamespace>Test</RootNamespace> -->
     </PropertyGroup>
   </Project>`;
-    const namespace = getRootNamespaceFromString(content);
+    const namespace = projects.getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
   });
@@ -173,7 +167,7 @@ suite("getRootNamespaceFromString", () => {
       <OutputType>Exe</OutputType> -->
     </PropertyGroup>
   </Project>`;
-    const namespace = getRootNamespaceFromString(content);
+    const namespace = projects.getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, null);
   });
@@ -186,7 +180,7 @@ suite("getRootNamespaceFromString", () => {
       <RootNamespace>Test</RootNamespace>
     </PropertyGroup>
   </Project>`;
-    const namespace = getRootNamespaceFromString(content);
+    const namespace = projects.getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, "Test");
   });
@@ -199,7 +193,7 @@ suite("getRootNamespaceFromString", () => {
       <OutputType>Exe</OutputType> -->
     </PropertyGroup>
   </Project>`;
-    const namespace = getRootNamespaceFromString(content);
+    const namespace = projects.getRootNamespaceFromString(content);
 
     assert.strictEqual(namespace, "Test");
   });
@@ -210,7 +204,7 @@ suite("getNearestProjectFile", () => {
     const projectFiles: vscode.Uri[] = [];
     const origin = vscode.Uri.file("/src/dir/example.cs");
 
-    const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
+    const nearestProjectFile = projects.getNearestProjectFile(projectFiles, origin);
 
     assert.strictEqual(nearestProjectFile, null);
   });
@@ -220,7 +214,7 @@ suite("getNearestProjectFile", () => {
     const projectFiles: vscode.Uri[] = [projectFile];
     const origin = vscode.Uri.file("/src/dir/example.cs");
 
-    const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
+    const nearestProjectFile = projects.getNearestProjectFile(projectFiles, origin);
 
     assert.strictEqual(nearestProjectFile, projectFile);
   });
@@ -230,7 +224,7 @@ suite("getNearestProjectFile", () => {
     const projectFiles: vscode.Uri[] = [projectFile];
     const origin = vscode.Uri.file("/src/dir");
 
-    const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
+    const nearestProjectFile = projects.getNearestProjectFile(projectFiles, origin);
 
     assert.strictEqual(nearestProjectFile, projectFile);
   });
@@ -240,7 +234,7 @@ suite("getNearestProjectFile", () => {
     const projectFiles: vscode.Uri[] = [projectFile];
     const origin = vscode.Uri.file("/src/dir/subdir/example.cs");
 
-    const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
+    const nearestProjectFile = projects.getNearestProjectFile(projectFiles, origin);
 
     assert.strictEqual(nearestProjectFile, projectFile);
   });
@@ -250,7 +244,7 @@ suite("getNearestProjectFile", () => {
     const projectFiles: vscode.Uri[] = [projectFile];
     const origin = vscode.Uri.file("/src/dir/subdir/subdir2/example.cs");
 
-    const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
+    const nearestProjectFile = projects.getNearestProjectFile(projectFiles, origin);
 
     assert.strictEqual(nearestProjectFile, projectFile);
   });
@@ -260,7 +254,7 @@ suite("getNearestProjectFile", () => {
     const projectFiles: vscode.Uri[] = [projectFile];
     const origin = vscode.Uri.file("/src/dir/example.cs");
 
-    const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
+    const nearestProjectFile = projects.getNearestProjectFile(projectFiles, origin);
 
     assert.strictEqual(nearestProjectFile, null);
   });
@@ -270,7 +264,7 @@ suite("getNearestProjectFile", () => {
     const projectFiles: vscode.Uri[] = [projectFile];
     const origin = vscode.Uri.file("/src/subdir/example.cs");
 
-    const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
+    const nearestProjectFile = projects.getNearestProjectFile(projectFiles, origin);
 
     assert.strictEqual(nearestProjectFile, null);
   });
@@ -280,7 +274,7 @@ suite("getNearestProjectFile", () => {
     const projectFiles: vscode.Uri[] = [projectFile];
     const origin = vscode.Uri.file("/src/subdir");
 
-    const nearestProjectFile = getNearestProjectFile(projectFiles, origin);
+    const nearestProjectFile = projects.getNearestProjectFile(projectFiles, origin);
 
     assert.strictEqual(nearestProjectFile, null);
   });
@@ -289,21 +283,21 @@ suite("getNearestProjectFile", () => {
 suite("getProjectName", () => {
   test("Base case", () => {
     const projectFile = vscode.Uri.file("/home/user/src/Project.csproj");
-    const projectName = getProjectName(projectFile);
+    const projectName = projects.getProjectName(projectFile);
 
     assert.strictEqual(projectName, "Project");
   });
 
   test("Project name with dots", () => {
     const projectFile = vscode.Uri.file("/home/user/src/Project1.Project2.csproj");
-    const projectName = getProjectName(projectFile);
+    const projectName = projects.getProjectName(projectFile);
 
     assert.strictEqual(projectName, "Project1.Project2");
   });
 
   test("Project name with unsupported symbols", () => {
     const projectFile = vscode.Uri.file("/home/user/src/Pro!je-ct.csproj");
-    const projectName = getProjectName(projectFile);
+    const projectName = projects.getProjectName(projectFile);
 
     assert.strictEqual(projectName, "Project");
   });
@@ -315,7 +309,7 @@ suite("appendPathSegementsToProjectName", () => {
     const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
     const filepath = vscode.Uri.file("/home/user/src/Models/Database/File.cs");
 
-    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+    const namespace = projects.appendPathSegementsToProjectName(projectName, projectFile, filepath);
 
     assert.strictEqual(namespace, "Project.Models.Database");
   });
@@ -325,7 +319,7 @@ suite("appendPathSegementsToProjectName", () => {
     const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
     const filepath = vscode.Uri.file("/home/user/src/File.cs");
 
-    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+    const namespace = projects.appendPathSegementsToProjectName(projectName, projectFile, filepath);
 
     assert.strictEqual(namespace, "Project");
   });
@@ -335,7 +329,7 @@ suite("appendPathSegementsToProjectName", () => {
     const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
     const filepath = vscode.Uri.file("/home/user/src/Database.Models/Table/File.cs");
 
-    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+    const namespace = projects.appendPathSegementsToProjectName(projectName, projectFile, filepath);
 
     assert.strictEqual(namespace, "Project.Database.Models.Table");
   });
@@ -345,7 +339,7 @@ suite("appendPathSegementsToProjectName", () => {
     const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
     const filepath = vscode.Uri.file("/home/something/Models/Database/File.cs");
 
-    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+    const namespace = projects.appendPathSegementsToProjectName(projectName, projectFile, filepath);
 
     assert.strictEqual(namespace, "Project");
   });
@@ -355,7 +349,7 @@ suite("appendPathSegementsToProjectName", () => {
     const projectFile = vscode.Uri.file("/home/user/src/project.csproj");
     const filepath = vscode.Uri.file("/home/user/src2/Models/Database/File.cs");
 
-    const namespace = appendPathSegementsToProjectName(projectName, projectFile, filepath);
+    const namespace = projects.appendPathSegementsToProjectName(projectName, projectFile, filepath);
 
     assert.strictEqual(namespace, "Project");
   });

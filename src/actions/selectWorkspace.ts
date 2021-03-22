@@ -1,9 +1,5 @@
 import * as vscode from "vscode";
 
-export async function getWorkspaceFromUri(uri: vscode.Uri) {
-  return vscode.workspace.getWorkspaceFolder(uri);
-}
-
 export async function selectWorkspace() {
   const workspaces = vscode.workspace.workspaceFolders;
 

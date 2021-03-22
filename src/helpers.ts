@@ -1,16 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
 
-export function getUriOfFocusedDocument() {
-  const focusedDocument = vscode.window.activeTextEditor?.document;
-
-  if (focusedDocument && !focusedDocument.isUntitled) {
-    return focusedDocument.uri;
-  }
-
-  return null;
-}
-
 export async function getTextFromFile(file: vscode.Uri) {
   const document = await vscode.workspace.openTextDocument(file);
 

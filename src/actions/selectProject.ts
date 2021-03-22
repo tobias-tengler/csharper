@@ -3,7 +3,7 @@ import { PathItem } from "../types/PathItem";
 import { TITLE, TOTAL_STEPS } from "../constants";
 import * as path from "path";
 import * as vscode from "vscode";
-import { getProjectName } from "../projects";
+import { projects } from "../projects";
 
 export async function selectProject(projectFiles: Uri[]) {
   const projectItems = getProjectPathItems(projectFiles);
@@ -49,7 +49,7 @@ export async function selectProject(projectFiles: Uri[]) {
 export function getProjectPathItems(projectFiles: Uri[]) {
   return projectFiles
     .map<PathItem>((projectFile) => ({
-      label: getProjectName(projectFile),
+      label: projects.getProjectName(projectFile),
       description: vscode.workspace.asRelativePath(projectFile, false),
       uri: projectFile,
     }))

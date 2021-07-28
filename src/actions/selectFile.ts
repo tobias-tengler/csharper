@@ -60,7 +60,7 @@ export async function selectFile(directory: Uri, isInterface: boolean) {
 
           if (fs.existsSync(fileUri.fsPath)) {
             input.validationMessage = "File already exists";
-            input.value = getRelativePath(directory, fileUri).replace(/^\/+/, "").replace(/\.cs$/, "");
+            input.value = getRelativePath(directory, fileUri).replace(/^(\/|\\)+/, "").replace(/\.cs$/, "");
             error = true;
 
             return;
